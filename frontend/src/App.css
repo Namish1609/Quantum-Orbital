@@ -14,24 +14,51 @@ code {
     monospace;
 }
 
-.App {
+.top-nav {
   display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  background-color: #333;
+  padding: 10px 20px;
+  gap: 20px;
+  border-bottom: 2px solid #555;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-.controls {
-  background: #111;
-  padding: 20px;
+.top-nav h3 {
+  margin: 0;
+  color: #00aaff;
+  margin-right: auto;
+}
+
+.top-nav-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.App {
+  display: flex;
+  height: calc(100vh - 54px); /* Fallback */
+  width: 100vw;
+  overflow: hidden;
+  background-color: #111;
+  color: #fff;
+  font-family: sans-serif;
+}
+
+.controls-sidebar {
+  background: #222;
+  padding: 15px;
   width: 300px;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+  box-sizing: border-box;
+  border-right: 1px solid #444;
   z-index: 10;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .control-group {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .control-group label {
@@ -52,7 +79,79 @@ code {
   font-weight: bold;
 }
 
-.canvas-container {
-  flex-grow: 1;
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   position: relative;
+  height: 100%;
+}
+
+.canvas-container {
+  flex: 2;
+  position: relative;
+  background: #000;
+}
+
+/* Tablet & Mobile Responsiveness */
+@media (max-width: 768px) {
+  .App {
+    flex-direction: column;
+    overflow-y: visible;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .controls-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #444;
+    max-height: 50vh; /* Keep some space for 3D view */
+  }
+
+  .main-content {
+    height: 70vh; /* Fixed height ratio on mobile */
+    flex: none;
+  }
+  
+  .top-nav {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+  }
+  
+  .top-nav h3 {
+    margin-right: 0;
+  }
+
+  .top-nav-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .radial-graph-container {
+    height: auto !important;
+    min-height: 350px;
+    flex-direction: column !important;
+  }
+
+  .density-container {
+    width: 100% !important;
+    flex-direction: column !important;
+    margin: 10px 0 !important;
+    height: auto !important;
+  }
+
+  .density-bar-vertical {
+    display: none !important;
+  }
+
+  .page-style {
+    padding: 20px !important;
+  }
+
+  .google-ad-placeholder {
+    min-height: 60px !important;
+  }
 }

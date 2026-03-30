@@ -334,16 +334,18 @@ const App = () => {
   return (
     <>
       {/* Top Navigation Bar */}
-      <div style={{ display: 'flex', backgroundColor: '#333', padding: '10px 20px', gap: '20px', borderBottom: '2px solid #555' }}>
-        <h3 style={{ margin: 0, color: '#00aaff', marginRight: 'auto' }}>Quantum Orbital Explorer</h3>
-        <button onClick={() => setCurrentPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome & Math</button>
-        <button onClick={() => setCurrentPage('chemistry')} style={navButtonStyle(currentPage === 'chemistry')}>Chemistry Concepts</button>
-        <button onClick={() => setCurrentPage('howto')} style={navButtonStyle(currentPage === 'howto')}>How To Use</button>
-        <button onClick={() => setCurrentPage('simulator')} style={navButtonStyle(currentPage === 'simulator')}><strong>Simulator</strong></button>
+      <div className="top-nav">
+        <h3>Quantum Orbital Explorer</h3>
+        <div className="top-nav-buttons">
+          <button onClick={() => setCurrentPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome & Math</button>
+          <button onClick={() => setCurrentPage('chemistry')} style={navButtonStyle(currentPage === 'chemistry')}>Chemistry Concepts</button>
+          <button onClick={() => setCurrentPage('howto')} style={navButtonStyle(currentPage === 'howto')}>How To Use</button>
+          <button onClick={() => setCurrentPage('simulator')} style={navButtonStyle(currentPage === 'simulator')}><strong>Simulator</strong></button>
+        </div>
       </div>
 
       {currentPage === 'welcome' && (
-        <div style={pageStyle}>
+        <div style={pageStyle} className="page-style">
           <h1>Welcome to the Quantum Orbital Explorer</h1>
           <p>Welcome to an interactive journey into the quantum world of atoms.</p>
           <p>This platform is designed to help students, educators, chemistry enthusiasts, and researchers visualize one of the most important concepts in modern physics and chemistry: the spatial probability distribution of electrons around an atomic nucleus.</p>
@@ -427,7 +429,7 @@ const App = () => {
       )}
 
       {currentPage === 'chemistry' && (
-        <div style={pageStyle}>
+        <div style={pageStyle} className="page-style">
           <h1>Chemistry Concepts</h1>
           <p>Atomic orbitals are one of the most important concepts in chemistry. They explain how atoms bond, why molecules take specific shapes, and why different elements behave differently.</p>
           <p>Orbitals are NOT physical paths. They are probability regions derived from the quantum mechanical wavefunction. These regions indicate where electrons are most likely to be found.</p>
@@ -470,7 +472,7 @@ const App = () => {
       )}
 
       {currentPage === 'howto' && (
-        <div style={pageStyle}>
+        <div style={pageStyle} className="page-style">
           <h1>How To Use This App</h1>
           <h2>1. Select Quantum Numbers</h2>
           <p>Use the sliders on the left panel to pick a valid hydrogenic state. Remember that <strong>l</strong> must be strictly less than <strong>n</strong>, and <strong>m</strong> is bounded between <strong>-l</strong> and <strong>l</strong>. You can also adjust the atomic number <strong>Z</strong> to see the orbital shrinkage of heavier atomic nuclei like Helium (<strong>Z = 2</strong>) or Carbon (<strong>Z = 6</strong>).</p>
@@ -498,10 +500,10 @@ const App = () => {
       )}
 
       {currentPage === 'simulator' && (
-        <div className="App" style={{ display: 'flex', height: 'calc(100vh - 54px)', width: '100vw', backgroundColor: '#111', color: '#fff', fontFamily: 'sans-serif', overflow: 'hidden' }}>
+        <div className="App">
           
           {/* Sidebar Controls */}
-      <div className="controls-sidebar" style={{ width: '300px', padding: '15px', overflowY: 'auto', backgroundColor: '#222', borderRight: '1px solid #444', flexShrink: 0 }}>
+      <div className="controls-sidebar">
         <h3 style={{marginTop: 0}}>Quantum Simulator</h3>
         
         <form onSubmit={handleUpdate} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
@@ -575,8 +577,8 @@ const App = () => {
       </div>
 
       {/* Main Render Area */}
-      <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 54px)', position: 'relative' }}>
-          <div style={{ flex: 2, position: 'relative', background: '#000' }}>
+      <div className="main-content">
+          <div className="canvas-container">
             <Canvas dpr={[1, 2]} gl={{ antialias: true, alpha: false }} camera={{ position: [0, 0, gridSize * 1.5], fov: 60 }}>
                 <color attach="background" args={['#111111']} />
                 <ambientLight intensity={0.5} />
@@ -606,7 +608,7 @@ const App = () => {
             <span><strong style={{color:'#ccc'}}>Controls:</strong> Left-Click to Rotate &bull; Right-Click to Pan/Move Target &bull; Scroll to Zoom</span>
           </div>
 
-          <div style={{ height: '220px', backgroundColor: '#1a1a1a', padding: '10px', borderTop: '2px solid #333', display: 'flex', flexDirection: 'row' }}>
+          <div className="radial-graph-container" style={{ height: '220px', backgroundColor: '#1a1a1a', padding: '10px', borderTop: '2px solid #333', display: 'flex', flexDirection: 'row' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', color: '#ccc' }}>Radial Probability Distribution</h4>
               <ResponsiveContainer width="100%" height="90%">
@@ -622,10 +624,10 @@ const App = () => {
             </div>
             
             {!showPhase && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '80px', marginLeft: '10px' }}>
+              <div className="density-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '80px', marginLeft: '10px' }}>
                 <div style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: '10px' }}>Density</div>
-                <div style={{ display: 'flex', flexDirection: 'row', height: '160px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: '8px', fontSize: '0.75rem', color: '#aaa' }}>
+                <div className="density-bar" style={{ display: 'flex', flexDirection: 'row', height: '160px' }}>
+                  <div className="density-labels" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: '8px', fontSize: '0.75rem', color: '#aaa' }}>
                     <span>100</span>
                     <span>80</span>
                     <span>60</span>
@@ -633,7 +635,7 @@ const App = () => {
                     <span>20</span>
                     <span>0</span>
                   </div>
-                  <div style={{ width: '15px', background: 'linear-gradient(to bottom, #ff8c00, #c51b7d, #30005c)', borderRadius: '3px' }}></div>
+                  <div className="density-gradient" style={{ width: '15px', background: 'linear-gradient(to bottom, #ff8c00, #c51b7d, #30005c)', borderRadius: '3px' }}></div>
                 </div>
               </div>
             )}
