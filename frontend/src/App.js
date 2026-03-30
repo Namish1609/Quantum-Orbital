@@ -345,54 +345,125 @@ const App = () => {
       {currentPage === 'welcome' && (
         <div style={pageStyle}>
           <h1>Welcome to the Quantum Orbital Explorer</h1>
+          <p>Welcome to an interactive journey into the quantum world of atoms.</p>
+          <p>This platform is designed to help students, educators, chemistry enthusiasts, and researchers visualize one of the most important concepts in modern physics and chemistry: the spatial probability distribution of electrons around an atomic nucleus.</p>
+          <p>Unlike classical physics, electrons do not move in fixed circular paths around the nucleus like planets orbiting the sun. Instead, quantum mechanics describes electrons as wave-like entities whose locations can only be predicted probabilistically.</p>
+          <p>This simulator transforms those mathematical probability distributions into beautiful three-dimensional visual models so that abstract equations become visually intuitive.</p>
           
-          <div className="google-ad-placeholder" style={{ margin: '20px 0', width: '100%', minHeight: '90px', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #555' }}>
-            <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Google Ad Slot</span>
-          </div>
-
-          <p>This application renders 3D atomic orbitals using the analytical solutions to the Schrödinger equation for hydrogen-like atoms.</p>
-          
-          <h2>The Mathematics</h2>
-          <p>The time-independent Schrödinger equation for a single-electron atom is exactly solvable. The wavefunction $\psi(r, \theta, \phi)$ in spherical coordinates is given by:</p>
-          
+          <h2>The Mathematical Foundation</h2>
+          <p>The entire simulation is based on the exact analytical solutions of the time-independent Schrödinger equation for hydrogen-like atoms.</p>
+          <p>The equation is:</p>
           <div style={mathStyles}>
-            <p>{"$\\psi_{n,l,m}(r, \\theta, \\phi) = R_{n,l}(r) \\cdot Y_{l,m}(\\theta, \\phi)$"}</p>
+            <p><strong>Ĥψ = Eψ</strong></p>
           </div>
-          
-          <p>Where:</p>
+          <p>Here:</p>
           <ul>
-            <li><strong>$n$ (Principal Quantum Number):</strong> Determines the energy shell and size of the orbital.</li>
-            <li><strong>$l$ (Azimuthal/Angular Momentum):</strong> Determines the shape of the subshell ($s, p, d, f$).</li>
-            <li><strong>$m$ (Magnetic Quantum Number):</strong> Determines the orientation of the orbital in 3D space.</li>
-            <li><strong>{"$R_{n,l}$"}</strong> is the Radial wave function based on generalized Laguerre polynomials.</li>
-            <li><strong>{"$Y_{l,m}$"}</strong> are the Spherical Harmonics.</li>
+            <li><strong>Ĥ</strong> is the Hamiltonian operator</li>
+            <li><strong>ψ</strong> is the wavefunction</li>
+            <li><strong>E</strong> is the energy eigenvalue</li>
+          </ul>
+          
+          <p>For a single-electron atom, such as hydrogen, this equation can be solved exactly. Because atoms possess spherical symmetry, spherical coordinates are the natural coordinate system: <strong>(r, θ, φ)</strong></p>
+          
+          <p>The total wavefunction is written as:</p>
+          <div style={mathStyles}>
+            <p><strong>ψ<sub>n,l,m</sub>(r, θ, φ) = R<sub>n,l</sub>(r) &middot; Y<sub>l,m</sub>(θ, φ)</strong></p>
+          </div>
+          <p>This means the solution separates into two physically meaningful parts.</p>
+
+          <h3>Radial Part: R<sub>n,l</sub>(r)</h3>
+          <p>This determines how the electron probability changes as we move farther from the nucleus. It controls:</p>
+          <ul>
+            <li>orbital size</li>
+            <li>radial nodes</li>
+            <li>shell expansion</li>
           </ul>
 
-          <p>The <b>probability density</b> of finding an electron at a specific point in space is the magnitude squared of the wavefunction:</p>
+          <h3>Angular Part: Y<sub>l,m</sub>(θ, φ)</h3>
+          <p>These are spherical harmonics. They determine:</p>
+          <ul>
+            <li>shape of lobes</li>
+            <li>orientation in 3D space</li>
+            <li>nodal planes</li>
+          </ul>
+
+          <h2>Quantum Numbers</h2>
+          <p>The wavefunction depends on three quantum numbers.</p>
+
+          <h3>Principal Quantum Number (n)</h3>
+          <p>This determines the main energy level. Higher <strong>n</strong> means:</p>
+          <ul>
+            <li>larger orbitals</li>
+            <li>more nodes</li>
+            <li>higher energy</li>
+          </ul>
+          <p>Examples: <strong>n=1</strong> &rarr; K shell | <strong>n=2</strong> &rarr; L shell | <strong>n=3</strong> &rarr; M shell</p>
+
+          <h3>Azimuthal Quantum Number (l)</h3>
+          <p>This defines the shape.</p>
+          <ul>
+            <li><strong>l=0</strong> &rarr; s orbital</li>
+            <li><strong>l=1</strong> &rarr; p orbital</li>
+            <li><strong>l=2</strong> &rarr; d orbital</li>
+            <li><strong>l=3</strong> &rarr; f orbital</li>
+          </ul>
+
+          <h3>Magnetic Quantum Number (m)</h3>
+          <p>This determines the orientation of the orbital in space. It changes how the orbital rotates and aligns along different axes.</p>
+
+          <h2>Probability Density</h2>
+          <p>The measurable quantity is not the wavefunction itself but its magnitude squared.</p>
           <div style={mathStyles}>
-            <p>{"$P(r, \\theta, \\phi) = |\\psi_{n,l,m}|^2$"}</p>
+            <p><strong>P(r, θ, φ) = |ψ|<sup>2</sup></strong></p>
           </div>
+          <p>This gives the probability density. Dense regions correspond to places where the electron is more likely to be found.</p>
+
+          <h2>Why This Matters</h2>
+          <p>This mathematical model forms the foundation of atomic structure, chemical bonding, spectroscopy, quantum chemistry, molecular orbital theory, and periodic table trends.</p>
+          <p>Every modern chemistry concept ultimately originates from these equations.</p>
           
-          <button onClick={() => setCurrentPage('simulator')} style={nextButton}>Go to Simulator</button>
+          <button onClick={() => setCurrentPage('chemistry')} style={nextButton}>Continue to Chemistry Concepts</button>
         </div>
       )}
 
       {currentPage === 'chemistry' && (
         <div style={pageStyle}>
           <h1>Chemistry Concepts</h1>
-          <div className="google-ad-placeholder" style={{ margin: '20px 0', width: '100%', minHeight: '90px', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #555' }}>
-            <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Google Ad Slot</span>
-          </div>
-          <h2>Atomic Orbitals ($s, p, d, f$)</h2>
-          <p>Orbitals are regions in an atom where there is a high probability of finding electrons. They are the chemical foundation for how atoms bond to form molecules.</p>
+          <p>Atomic orbitals are one of the most important concepts in chemistry. They explain how atoms bond, why molecules take specific shapes, and why different elements behave differently.</p>
+          <p>Orbitals are NOT physical paths. They are probability regions derived from the quantum mechanical wavefunction. These regions indicate where electrons are most likely to be found.</p>
+
+          <h2>s Orbitals</h2>
+          <p>s orbitals correspond to: <strong>l=0</strong></p>
+          <p>These are spherical. Because they are perfectly symmetric, they play a major role in the hydrogen atom, alkali metals, and sigma bonding. Examples: 1s, 2s, 3s. Higher s orbitals contain radial nodes.</p>
+
+          <h2>p Orbitals</h2>
+          <p>p orbitals correspond to: <strong>l=1</strong></p>
+          <p>These are dumbbell shaped. They contain one angular nodal plane. There are three orientations: <strong>p<sub>x</sub></strong>, <strong>p<sub>y</sub></strong>, <strong>p<sub>z</sub></strong>.</p>
+          <p>These orbitals are fundamental for covalent bonding, pi bonds, and molecular geometry.</p>
+
+          <h2>d Orbitals</h2>
+          <p>d orbitals correspond to: <strong>l=2</strong></p>
+          <p>These are more complex. Common shapes include four-lobed clover structures and dumbbell plus torus ring structures.</p>
+          <p>These are extremely important in transition metal chemistry, crystal field splitting, catalysts, and magnetic materials.</p>
+
+          <h2>f Orbitals</h2>
+          <p>f orbitals correspond to: <strong>l=3</strong></p>
+          <p>These are highly complex multi-lobed structures. They are essential in lanthanides, actinides, and rare earth chemistry. These explain the unique electronic and magnetic properties of heavy elements.</p>
+
+          <h2>Nodes</h2>
+          <p>Nodes are regions where the probability is zero. At these points: <strong>ψ = 0</strong>. No electron can exist there. There are two major types: radial nodes and angular nodes.</p>
+
+          <h2>Wavefunction Phase</h2>
+          <p>The wavefunction has sign. Positive and negative signs represent phase. In your simulator:</p>
           <ul>
-            <li><strong>$l=0$ ($s$-orbitals):</strong> Spherical. They have anti-nodes at the center.</li>
-            <li><strong>$l=1$ ($p$-orbitals):</strong> Dumbbell-shaped with a planar node at the nucleus. There are 3 orientations ($m = -1, 0, 1$).</li>
-            <li><strong>$l=2$ ($d$-orbitals):</strong> Clover-shaped or dumbbell with a donut ring. Important for transition metals.</li>
-            <li><strong>$l=3$ ($f$-orbitals):</strong> Complex multi-lobed structures. Important for lanthanides and actinides.</li>
+            <li><strong>Red</strong> = positive phase</li>
+            <li><strong>Blue</strong> = negative phase</li>
           </ul>
-          <h2>Phases & Wavefunctions</h2>
-          <p>A wavefunction has a sign (positive or negative). When plotting the <b>Wavefunction Phase</b>, you see Red (Positive) and Blue (Negative) lobes. The interface between these colors represents an <i>angular node</i> where the probability of finding an electron is exactly zero.</p>
+          <p>This is extremely important in chemistry because orbital overlap depends on phase. Constructive overlap leads to bonding. Destructive overlap leads to antibonding orbitals.</p>
+
+          <h2>Applications in Chemistry</h2>
+          <p>These concepts explain sigma bonds, pi bonds, hybridization, molecular orbital theory, spectroscopy, and reaction mechanisms.</p>
+          <p><strong>Without orbitals, modern chemistry cannot be understood.</strong></p>
           
           <button onClick={() => setCurrentPage('howto')} style={nextButton}>Continue to How To Use</button>
         </div>
@@ -401,20 +472,26 @@ const App = () => {
       {currentPage === 'howto' && (
         <div style={pageStyle}>
           <h1>How To Use This App</h1>
-          <div className="google-ad-placeholder" style={{ margin: '20px 0', width: '100%', minHeight: '90px', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #555' }}>
-            <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Google Ad Slot</span>
-          </div>
           <h2>1. Select Quantum Numbers</h2>
-          <p>Use the sliders on the left panel to pick a valid hydrogenic state. Remember that $l$ must be strictly less than $n$, and $m$ is bounded between $-l$ and $l$. You can also adjust $Z$ to see the orbital shrinkage of heavier atomic nuclei like Helium ($Z=2$) or Carbon ($Z=6$).</p>
+          <p>Use the sliders on the left panel to pick a valid hydrogenic state. Remember that <strong>l</strong> must be strictly less than <strong>n</strong>, and <strong>m</strong> is bounded between <strong>-l</strong> and <strong>l</strong>. You can also adjust the atomic number <strong>Z</strong> to see the orbital shrinkage of heavier atomic nuclei like Helium (<strong>Z = 2</strong>) or Carbon (<strong>Z = 6</strong>).</p>
           
           <h2>2. Visualization Modes</h2>
           <ul>
             <li><strong>Probabilistic Scatter:</strong> Uses a Monte Carlo simulation to randomly place dots proportional to the mathematical probability density. High density means more dots.</li>
-            <li><strong>Isosurface Mode:</strong> Draws a solid 3D mesh boundary containing all regions where the probability is greater than your selected threshold boundary. Like a solid balloon.</li>
+            <li><strong>Isosurface Mode:</strong> Draws a solid 3D mesh boundary containing all regions where the probability is greater than your selected threshold boundary. This looks like a solid balloon.</li>
           </ul>
 
           <h2>3. Advanced Controls</h2>
-          <p>Toggle phase mapping, adjust grid sizes for larger orbitals (like $n=7$), or increase resolution up to 200 for incredibly smooth 3D structures.</p>
+          <p>Toggle phase mapping to see positive and negative regions of the wavefunction.</p>
+          <p>You can adjust grid sizes for larger orbitals (like <strong>n = 7</strong>), or increase resolution up to 200 for incredibly smooth 3D structures.</p>
+          
+          <h2>4. Changing Views</h2>
+          <p>Use your mouse to interact with the 3D model:</p>
+          <ul>
+            <li><strong>Left-Click & Drag:</strong> Rotate the orbital</li>
+            <li><strong>Right-Click & Drag:</strong> Pan / move the target</li>
+            <li><strong>Scroll:</strong> Zoom in and out</li>
+          </ul>
           
           <button onClick={() => setCurrentPage('simulator')} style={{...nextButton, backgroundColor: '#28a745'}}>Launch Simulator 🚀</button>
         </div>
