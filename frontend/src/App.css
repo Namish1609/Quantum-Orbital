@@ -24,6 +24,37 @@ code {
   align-items: center;
 }
 
+@media (min-width: 769px) {
+  .top-nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    transform: translateY(calc(-100% + 5px)); /* Leave a tiny 5px sliver visible so user knows it's there */
+    transition: transform 0.3s ease-in-out;
+    box-sizing: border-box;
+  }
+
+  .top-nav::after {
+    content: '';
+    position: absolute;
+    bottom: -15px; /* Hover target area below the nav */
+    left: 0;
+    right: 0;
+    height: 15px;
+    background: transparent;
+  }
+
+  .top-nav:hover {
+    transform: translateY(0);
+  }
+
+  .App {
+    height: 100vh;
+  }
+}
+
 .top-nav h3 {
   margin: 0;
   color: #00aaff;
@@ -38,12 +69,39 @@ code {
 
 .App {
   display: flex;
-  height: calc(100vh - 54px); /* Fallback */
+  height: 100vh;
   width: 100vw;
   overflow: hidden;
   background-color: #111;
   color: #fff;
   font-family: sans-serif;
+}
+
+/* React Split Pane Reset */
+.Resizer {
+  background: #000;
+  opacity: 0.8;
+  z-index: 1;
+  box-sizing: border-box;
+  background-clip: padding-box;
+}
+
+.Resizer:hover {
+  transition: all 0.2s ease;
+}
+
+.Resizer.horizontal {
+  height: 11px;
+  margin: -5px 0;
+  border-top: 5px solid rgba(255, 255, 255, 0);
+  border-bottom: 5px solid rgba(255, 255, 255, 0);
+  cursor: row-resize;
+  width: 100%;
+}
+
+.Resizer.horizontal:hover {
+  border-top: 5px solid rgba(0, 170, 255, 0.5);
+  border-bottom: 5px solid rgba(0, 170, 255, 0.5);
 }
 
 .controls-sidebar {
@@ -97,30 +155,21 @@ code {
 @media (max-width: 768px) {
   .App {
     flex-direction: column;
-    overflow-y: visible;
-    height: auto;
-    min-height: 100vh;
-  }
-  
-  .controls-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #444;
-    max-height: 50vh; /* Keep some space for 3D view */
+    /* Move main render up and let it use remaining space */
+    height: 100vh;
+    overflow: hidden;
   }
 
-  .main-content {
-    height: 70vh; /* Fixed height ratio on mobile */
-    flex: none;
-  }
-  
   .top-nav {
+    position: static;
+    transform: none;
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    padding: 15px;
+    padding: 10px;
+    z-index: auto;
   }
-  
+
   .top-nav h3 {
     margin-right: 0;
   }
@@ -130,14 +179,37 @@ code {
     justify-content: center;
   }
 
+  .main-content {
+    flex: 1; /* Main viewer grabs the rest of the height */
+    height: auto;
+    position: relative;
+    order: 1; /* Keep it below top nav, above controls */
+  }
+
+  /* Make controls & graph live in a scrollable bottom tray */
+  .mobile-tools-tray {
+    order: 2;
+    height: 40vh; /* Adjustable slider drawer feel */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: #111;
+    border-top: 2px solid #555;
+  }
+
+  .controls-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 2px solid #333;
+    max-height: none; 
+    flex-shrink: 0;
+  }
+
   .radial-graph-container {
     height: auto !important;
     min-height: 350px;
     flex-direction: column !important;
-  }
-
-  .density-container {
-    width: 100% !important;
+    flex-shrink: 0;
     flex-direction: column !important;
     margin: 10px 0 !important;
     height: auto !important;

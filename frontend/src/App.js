@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
@@ -51,7 +51,12 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
         let color = new THREE.Color();
         if (showPhase) {
             color.copy(phase > 0 ? phasePosColor : phaseNegColor);
-            color.multiplyScalar(Math.max(0.2, density * 3)); // enhance brightness locally without going full black
+            
+            // Calculate distance from center to fade brightness
+            const r = Math.sqrt(x*x + y*y + z*z);
+            const distanceFade = Math.max(0.1, 30.0 / (r + 30.0)); // Fades smoothly with distance
+            
+            color.multiplyScalar(Math.max(0.2, density * 5) * distanceFade);
         } else {
             const c1 = new THREE.Color("#30005c"); // Dark Purple (Low Density)
             const c2 = new THREE.Color("#c51b7d"); // Magenta/Purple (Mid Density)
@@ -97,7 +102,7 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
         sizeAttenuation={true}
         map={circleTexture}
         alphaTest={0.05}
-        depthWrite={false}
+        depthWrite={true}
       />
     </points>
   );
@@ -253,6 +258,9 @@ const App = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [renderKey, setRenderKey] = useState(0); // Force Three.js rerenders
 
+  // Graph resizing state
+  const [graphHeight, setGraphHeight] = useState(220);
+
   const API_BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : '';
 
   const fetchData = async () => {
@@ -314,6 +322,26 @@ const App = () => {
   const handleUpdate = (e) => {
     e.preventDefault();
     fetchData();
+  };
+
+  const startResize = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = graphHeight;
+
+    const onMouseMove = (moveEvent) => {
+      const delta = startY - moveEvent.clientY;
+      const newHeight = Math.max(100, Math.min(startHeight + delta, window.innerHeight * 0.8));
+      setGraphHeight(newHeight);
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   };
 
   useEffect(() => {
@@ -577,8 +605,8 @@ const App = () => {
       </div>
 
       {/* Main Render Area */}
-      <div className="main-content">
-          <div className="canvas-container">
+      <div className="main-content" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+          <div className="canvas-container" style={{ flex: 1, minHeight: 0 }}>
             <Canvas dpr={[1, 2]} gl={{ antialias: true, alpha: false }} camera={{ position: [0, 0, gridSize * 1.5], fov: 60 }}>
                 <color attach="background" args={['#111111']} />
                 <ambientLight intensity={0.5} />
@@ -604,14 +632,32 @@ const App = () => {
             </Canvas>
           </div>
 
-          <div style={{ height: '30px', backgroundColor: '#111', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', borderTop: '1px solid #333' }}>
+          <div style={{ height: '30px', flexShrink: 0, backgroundColor: '#111', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>
             <span><strong style={{color:'#ccc'}}>Controls:</strong> Left-Click to Rotate &bull; Right-Click to Pan/Move Target &bull; Scroll to Zoom</span>
           </div>
 
-          <div className="radial-graph-container" style={{ height: '220px', backgroundColor: '#1a1a1a', padding: '10px', borderTop: '2px solid #333', display: 'flex', flexDirection: 'row' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', color: '#ccc' }}>Radial Probability Distribution</h4>
-              <ResponsiveContainer width="100%" height="90%">
+          <div
+            className="resize-handle"
+            onMouseDown={startResize}
+            style={{
+              height: '8px',
+              backgroundColor: '#444',
+              cursor: 'row-resize',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderTop: '1px solid #222',
+              borderBottom: '1px solid #222',
+              zIndex: 10
+            }}
+          >
+            <div style={{ width: '40px', height: '2px', backgroundColor: '#888', borderRadius: '1px' }}></div>
+          </div>
+
+          <div className="radial-graph-container" style={{ height: `${graphHeight}px`, flexShrink: 0, overflow: 'hidden', backgroundColor: '#1a1a1a', padding: '10px', display: 'flex', flexDirection: 'row' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', color: '#ccc', flexShrink: 0 }}>Radial Probability Distribution</h4>
+              <ResponsiveContainer width="100%" height="80%" style={{ flex: 1, minHeight: 0 }}>
                   <LineChart data={radialData} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                   <XAxis dataKey="r" stroke="#ccc" tick={{fill: '#ccc'}} tickFormatter={(val) => Number(val).toFixed(1)} tickCount={5} minTickGap={40} />
@@ -625,8 +671,8 @@ const App = () => {
             
             {!showPhase && (
               <div className="density-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '80px', marginLeft: '10px' }}>
-                <div style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: '10px' }}>Density</div>
-                <div className="density-bar" style={{ display: 'flex', flexDirection: 'row', height: '160px' }}>
+                <div style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: '10px', flexShrink: 0 }}>Density</div>
+                <div className="density-bar" style={{ display: 'flex', flexDirection: 'row', height: '80%', minHeight: 0 }}>
                   <div className="density-labels" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: '8px', fontSize: '0.75rem', color: '#aaa' }}>
                     <span>100</span>
                     <span>80</span>
@@ -635,7 +681,7 @@ const App = () => {
                     <span>20</span>
                     <span>0</span>
                   </div>
-                  <div className="density-gradient" style={{ width: '15px', background: 'linear-gradient(to bottom, #ff8c00, #c51b7d, #30005c)', borderRadius: '3px' }}></div>
+                  <div className="density-gradient" style={{ width: '15px', background: 'linear-gradient(to bottom, #ff8c00, #c51b7d, #30005c)', borderRadius: '3px', height: '100%' }}></div>
                 </div>
               </div>
             )}
