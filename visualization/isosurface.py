@@ -1,6 +1,6 @@
 import numpy as np
 from skimage.measure import marching_cubes
-import plotly.graph_objects as go
+
 
 def compute_isosurface(vol, grid_lin, isovalue, is_density=True):
     """
