@@ -99,7 +99,7 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
         vertexColors={true}
         transparent={true}
         opacity={opacity}
-        sizeAttenuation={false}
+        sizeAttenuation={true}
         map={circleTexture}
         alphaTest={0.05}
         depthWrite={true}
@@ -242,7 +242,7 @@ const App = () => {
   // Scatter Controls
   const [scatterGridRes, setScatterGridRes] = useState(120);
   const [numPoints, setNumPoints] = useState(500000);
-  const [pointSize, setPointSize] = useState(2.0);
+  const [pointSize, setPointSize] = useState(0.10);
   const [densityScale, setDensityScale] = useState(1.0);
   const [scatterOpacity, setScatterOpacity] = useState(0.8);
   
