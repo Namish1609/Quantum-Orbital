@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import {
@@ -24,13 +24,43 @@ const createCircleTexture = () => {
     ctx.arc(16, 16, 15, 0, 2 * Math.PI);
     ctx.fillStyle = 'white';
     ctx.fill();
-    return new THREE.CanvasTexture(canvas);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    return texture;
 };
 const circleTexture = createCircleTexture();
+
+const BASELINE_PIXELS = 1920 * 1080;
+const PHASE_NEG_COLOR = new THREE.Color('#3333ff');
+const DENSITY_C1 = new THREE.Color('#30005c');
+const DENSITY_C2 = new THREE.Color('#c51b7d');
+const DENSITY_C3 = new THREE.Color('#ff8c00');
+const BASE_POINTS_FOR_N1 = 150000;
+const POINT_INCREMENT_PER_N = 400000;
+const MAX_TOTAL_POINTS = 5000000;
+const BASE_POINT_SIZE = 0.1;
+const BOOSTED_POINT_SIZE = 0.2;
+
+const getPointCountForN = (nValue) => {
+  return Math.min(MAX_TOTAL_POINTS, BASE_POINTS_FOR_N1 + Math.max(0, nValue - 1) * POINT_INCREMENT_PER_N);
+};
 
 // --- Reusable Three.js Components ---
 
 const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
+  const { size, viewport } = useThree();
+  const dpr = viewport.dpr || 1;
+
+  const adaptivePointSize = useMemo(() => {
+    const cssPixels = Math.max(1, size.width * size.height);
+    const areaScale = Math.sqrt(cssPixels / BASELINE_PIXELS);
+    const dprScale = Math.max(1, Math.min(2.5, dpr));
+    const visibilityScale = Math.max(1, areaScale * 0.85) * (1 + (dprScale - 1) * 0.25);
+    return pointSize * visibilityScale;
+  }, [pointSize, size.width, size.height, dpr]);
+
   const { positions, colors } = useMemo(() => {
     if (!data || !data.points || data.points.length === 0) return { positions: null, colors: null };
     
@@ -38,40 +68,56 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
 
-    const phasePosColor = new THREE.Color("red");
-    const phaseNegColor = new THREE.Color("#3333ff");
+    const phaseNegR = PHASE_NEG_COLOR.r;
+    const phaseNegG = PHASE_NEG_COLOR.g;
+    const phaseNegB = PHASE_NEG_COLOR.b;
+    const c1r = DENSITY_C1.r;
+    const c1g = DENSITY_C1.g;
+    const c1b = DENSITY_C1.b;
+    const c2r = DENSITY_C2.r;
+    const c2g = DENSITY_C2.g;
+    const c2b = DENSITY_C2.b;
+    const c3r = DENSITY_C3.r;
+    const c3g = DENSITY_C3.g;
+    const c3b = DENSITY_C3.b;
 
     for (let i = 0; i < count; i++) {
-        const [x, y, z, density, phase] = data.points[i];
-        
-        pos[i * 3 + 0] = x;
-        pos[i * 3 + 1] = y;
-        pos[i * 3 + 2] = z;
+        const point = data.points[i];
+        const x = point[0];
+        const y = point[1];
+        const z = point[2];
+        const density = point[3];
+        const phase = point[4];
+        const idx = i * 3;
 
-        let color = new THREE.Color();
+        pos[idx + 0] = x;
+        pos[idx + 1] = y;
+        pos[idx + 2] = z;
+
         if (showPhase) {
-            color.copy(phase > 0 ? phasePosColor : phaseNegColor);
-            
-            // Calculate distance from center to fade brightness
             const r = Math.sqrt(x*x + y*y + z*z);
-            const distanceFade = Math.max(0.1, 30.0 / (r + 30.0)); // Fades smoothly with distance
-            
-            color.multiplyScalar(Math.max(0.2, density * 5) * distanceFade);
+            const distanceFade = Math.max(0.1, 30.0 / (r + 30.0));
+            const intensity = Math.max(0.2, density * 5) * distanceFade;
+            const baseR = phase > 0 ? 1 : phaseNegR;
+            const baseG = phase > 0 ? 0 : phaseNegG;
+            const baseB = phase > 0 ? 0 : phaseNegB;
+
+            col[idx + 0] = baseR * intensity;
+            col[idx + 1] = baseG * intensity;
+            col[idx + 2] = baseB * intensity;
         } else {
-            const c1 = new THREE.Color("#30005c"); // Dark Purple (Low Density)
-            const c2 = new THREE.Color("#c51b7d"); // Magenta/Purple (Mid Density)
-            const c3 = new THREE.Color("#ff8c00"); // Orange (High Density)
-            
             if (density < 0.5) {
-                color.copy(c1).lerp(c2, density * 2.0);
+                const t = density * 2.0;
+                col[idx + 0] = c1r + (c2r - c1r) * t;
+                col[idx + 1] = c1g + (c2g - c1g) * t;
+                col[idx + 2] = c1b + (c2b - c1b) * t;
             } else {
-                color.copy(c2).lerp(c3, (density - 0.5) * 2.0);
+                const t = (density - 0.5) * 2.0;
+                col[idx + 0] = c2r + (c3r - c2r) * t;
+                col[idx + 1] = c2g + (c3g - c2g) * t;
+                col[idx + 2] = c2b + (c3b - c2b) * t;
             }
         }
-
-        col[i * 3 + 0] = color.r;
-        col[i * 3 + 1] = color.g;
-        col[i * 3 + 2] = color.b;
     }
     return { positions: pos, colors: col };
   }, [data, showPhase]);
@@ -95,14 +141,15 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={pointSize}
+        size={adaptivePointSize}
         vertexColors={true}
         transparent={true}
         opacity={opacity}
         sizeAttenuation={true}
         map={circleTexture}
-        alphaTest={0.05}
-        depthWrite={true}
+        alphaTest={0.01}
+        depthWrite={false}
+        toneMapped={false}
       />
     </points>
   );
@@ -241,7 +288,7 @@ const App = () => {
   
   // Scatter Controls
   const [scatterGridRes, setScatterGridRes] = useState(120);
-  const [numPoints, setNumPoints] = useState(500000);
+  const [numPoints, setNumPoints] = useState(getPointCountForN(3));
   const [pointSize, setPointSize] = useState(0.10);
   const [densityScale, setDensityScale] = useState(1.0);
   const [scatterOpacity, setScatterOpacity] = useState(0.8);
@@ -260,6 +307,13 @@ const App = () => {
 
   // Graph resizing state
   const [graphHeight, setGraphHeight] = useState(220);
+
+  const canvasDpr = useMemo(() => {
+    const deviceDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    const scatterDprCap = numPoints >= 350000 ? 1.35 : 1.5;
+    const maxDpr = mode === 'scatter' ? scatterDprCap : 2;
+    return [1, Math.min(deviceDpr, maxDpr)];
+  }, [mode, numPoints]);
 
   const API_BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : '';
 
@@ -348,6 +402,16 @@ const App = () => {
     if (l >= n) setL(n - 1);
     // eslint-disable-next-line
   }, [n]);
+
+  useEffect(() => {
+    setNumPoints(getPointCountForN(n));
+  }, [n]);
+
+  useEffect(() => {
+    if (m === 0 && n > 4) {
+      setPointSize((prev) => (Math.abs(prev - BASE_POINT_SIZE) < 1e-6 ? BOOSTED_POINT_SIZE : prev));
+    }
+  }, [n, m]);
 
   useEffect(() => {
     if (Math.abs(m) > l) setM(0);
@@ -573,7 +637,7 @@ const App = () => {
                 <div className="control-group">
                   <span style={{color:'#aaa', fontSize:'0.9rem'}}>Scatter Params</span>
                   <label>Resolution: {scatterGridRes} <input type="range" value={scatterGridRes} min={30} max={150} onChange={e => setScatterGridRes(parseInt(e.target.value))} /></label>
-                  <label>Points: {numPoints} <input type="range" value={numPoints} min={1000} max={500000} step={1000} onChange={e => setNumPoints(parseInt(e.target.value))} /></label>
+                  <label>Points: {numPoints} <input type="range" value={numPoints} min={1000} max={MAX_TOTAL_POINTS} step={1000} onChange={e => setNumPoints(parseInt(e.target.value))} /></label>
                   <label>Point Size: {pointSize.toFixed(2)} <input type="range" value={pointSize} min={0.1} max={10.0} step={0.1} onChange={e => setPointSize(parseFloat(e.target.value))} /></label>
                   <label>Density Pow: {densityScale.toFixed(1)} <input type="range" value={densityScale} min={0.1} max={2.0} step={0.1} onChange={e => setDensityScale(parseFloat(e.target.value))} /></label>
                   <label>Opacity: {scatterOpacity.toFixed(1)} <input type="range" value={scatterOpacity} min={0.1} max={1.0} step={0.1} onChange={e => setScatterOpacity(parseFloat(e.target.value))} /></label>
@@ -607,7 +671,7 @@ const App = () => {
       {/* Main Render Area */}
       <div className="main-content" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
           <div className="canvas-container" style={{ flex: 1, minHeight: 0 }}>
-            <Canvas dpr={[1, 2]} gl={{ antialias: true, alpha: false }} camera={{ position: [0, 0, gridSize * 1.5], fov: 60 }}>
+            <Canvas dpr={canvasDpr} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }} performance={{ min: 0.6 }} camera={{ position: [0, 0, gridSize * 1.5], fov: 60 }}>
                 <color attach="background" args={['#111111']} />
                 <ambientLight intensity={0.5} />
                 <pointLight position={[100, 100, 100]} intensity={1} />

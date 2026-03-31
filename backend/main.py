@@ -104,7 +104,7 @@ def get_scatter(
 
     size: float = Query(30.0, gt=0),
 
-    num_points: int = Query(200000, le=500000),
+    num_points: int = Query(200000, le=5000000),
 
     density_scale: float = Query(1.0, gt=0)
 
@@ -138,8 +138,8 @@ def get_scatter(
 
         accepted_x, accepted_y, accepted_z, accepted_d, accepted_phase = [], [], [], [], []
         batch_size = 200000
-        max_iterations = 80
-        num_samples = min(num_points, 500000)
+        num_samples = min(num_points, 5000000)
+        max_iterations = max(80, int(np.ceil(num_samples / batch_size) * 8))
 
         for _ in range(max_iterations):
             if len(accepted_x) >= num_samples: break
