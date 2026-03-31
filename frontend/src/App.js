@@ -95,14 +95,14 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={pointSize * (window.devicePixelRatio || 1)}
+        size={pointSize}
         vertexColors={true}
         transparent={true}
         opacity={opacity}
         sizeAttenuation={false}
         map={circleTexture}
         alphaTest={0.05}
-        depthWrite={false}
+        depthWrite={true}
       />
     </points>
   );
