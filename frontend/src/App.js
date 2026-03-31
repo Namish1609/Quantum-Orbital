@@ -317,6 +317,35 @@ const App = () => {
 
   const API_BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : '';
 
+  const parseApiResponse = async (response, endpointName) => {
+    const raw = await response.text();
+
+    if (!response.ok) {
+      let detail = '';
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          detail = typeof parsed?.detail === 'string' ? parsed.detail : JSON.stringify(parsed);
+        } catch {
+          detail = raw;
+        }
+      }
+
+      const statusSuffix = response.statusText ? ` ${response.statusText}` : '';
+      throw new Error(detail || `${endpointName} request failed (${response.status}${statusSuffix}).`);
+    }
+
+    if (!raw) {
+      throw new Error(`${endpointName} returned an empty response.`);
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      throw new Error(`${endpointName} returned invalid JSON.`);
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     setErrorMsg("");
@@ -324,9 +353,9 @@ const App = () => {
     try {
       // Fetch Radial Data
       const radialRes = await fetch(`${API_BASE_URL}/radial?Z=${Z}&n=${n}&l=${l}&size=${gridSize}`);
-      const radialJson = await radialRes.json();
+      const radialJson = await parseApiResponse(radialRes, 'Radial API');
       
-      if (radialJson.data) {
+      if (Array.isArray(radialJson.data)) {
         setRadialData(radialJson.data);
       }
 
@@ -350,12 +379,7 @@ const App = () => {
       }
 
       const res3d = await fetch(`${API_BASE_URL}${endpoint}?${params.toString()}`);
-      if (!res3d.ok) {
-         const d = await res3d.json();
-         const errorDetail = typeof d.detail === 'string' ? d.detail : JSON.stringify(d.detail);
-         throw new Error(errorDetail || "API failed");
-      }
-      const data3d = await res3d.json();
+      const data3d = await parseApiResponse(res3d, '3D API');
       
       // Warn if arrays are empty 
       if (mode === 'isosurface' && (!data3d.surfaces || data3d.surfaces.length === 0)) {
@@ -367,7 +391,7 @@ const App = () => {
 
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message);
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to fetch simulation data.');
     } finally {
       setLoading(false);
     }
@@ -408,10 +432,17 @@ const App = () => {
   }, [n]);
 
   useEffect(() => {
-    if (m === 0 && n > 4) {
+    if (m !== 0) return;
+
+    if (n > 4 && Math.abs(pointSize - BASE_POINT_SIZE) < 1e-6) {
       setPointSize((prev) => (Math.abs(prev - BASE_POINT_SIZE) < 1e-6 ? BOOSTED_POINT_SIZE : prev));
+      return;
     }
-  }, [n, m]);
+
+    if (n <= 4 && Math.abs(pointSize - BOOSTED_POINT_SIZE) < 1e-6) {
+      setPointSize(BASE_POINT_SIZE);
+    }
+  }, [n, m, pointSize]);
 
   useEffect(() => {
     if (Math.abs(m) > l) setM(0);

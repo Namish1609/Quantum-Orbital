@@ -8,8 +8,6 @@ import sys
 
 import os
 
-from functools import lru_cache
-
 
 
 # Add parent directory to path to reach local physics packages
@@ -18,7 +16,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 
-from grid.grid import generate_cartesian_grid, cartesian_to_spherical
+from grid.grid import cartesian_to_spherical
 
 from physics.hydrogen import hydrogen_wavefunction, radial_probability
 
@@ -27,6 +25,8 @@ from visualization.isosurface import compute_isosurface
 
 
 app = FastAPI(title="Quantum Orbital API")
+
+MAX_ISOSURFACE_RESOLUTION = 160
 
 
 
@@ -66,25 +66,26 @@ app.mount("/static", StaticFiles(directory=os.path.join(FRONTEND_BUILD_DIR, "sta
 async def root():
     return FileResponse(os.path.join(FRONTEND_BUILD_DIR, "index.html"))
 
-@lru_cache(maxsize=32)
-
 def compute_volume(n: int, l: int, m: int, Z: float, resolution: int, size: float):
 
     # Cap resolution to prevent memory exhaustion, but allow enough for high-fidelity isosurfaces
 
-    res = min(resolution, 200)
+    res = min(resolution, MAX_ISOSURFACE_RESOLUTION)
 
-    
+    lin = np.linspace(-size, size, res, dtype=np.float32)
+    x = lin[:, None, None]
+    y = lin[None, :, None]
+    z = lin[None, None, :]
 
-    X, Y, Z_grid, lin = generate_cartesian_grid(size=size, resolution=res)
-
-    r, theta, phi = cartesian_to_spherical(X, Y, Z_grid)
-
-    
+    # Build spherical coordinates directly from broadcasted axes to reduce peak memory pressure.
+    epsilon = np.float32(1e-12)
+    r = np.sqrt(x * x + y * y + z * z)
+    r_safe = np.where(r == 0, epsilon, r)
+    theta = np.arccos(np.clip(z / r_safe, -1.0, 1.0))
+    phi = np.arctan2(y, x)
 
     psi = hydrogen_wavefunction(r, theta, phi, n, l, m, Z)
-
-    return X, Y, Z_grid, lin, psi
+    return lin, psi
 
 
 
@@ -265,7 +266,7 @@ def get_isosurface(
 
     try:
 
-        X, Y, Z_grid, lin, psi = compute_volume(n, l, m, Z, resolution, size)
+        lin, psi = compute_volume(n, l, m, Z, resolution, size)
 
         
 
@@ -280,10 +281,6 @@ def get_isosurface(
             density = density / d_max
 
             
-
-        psi_real = np.real(psi)
-
-        
 
         surfaces = []
 
@@ -351,6 +348,13 @@ def get_isosurface(
 
 
 
+    except MemoryError:
+
+        raise HTTPException(
+            status_code=503,
+            detail="Insufficient memory for this isosurface request. Try reducing resolution or grid size."
+        )
+
     except Exception as e:
 
         import traceback
@@ -365,35 +369,44 @@ def get_isosurface(
 
 def get_radial(
 
-    n: int = Query(...),
+    n: int = Query(..., ge=1, le=10),
 
-    l: int = Query(...),
+    l: int = Query(..., ge=0),
 
-    Z: float = Query(1.0),
+    Z: float = Query(1.0, gt=0),
 
-    size: float = Query(30.0)
+    size: float = Query(30.0, gt=0)
 
 ):
 
-    r_1d = np.linspace(0.01, size, 200)
+    if l >= n:
+        raise HTTPException(400, "l must be strict less than n.")
 
-    P_r = radial_probability(r_1d, n, l, Z)
+    try:
+        r_1d = np.linspace(0.01, size, 200)
 
-    
+        P_r = radial_probability(r_1d, n, l, Z)
 
-    # Return array of {r, P} for recharts
+        # Return array of {r, P} for recharts
+        data = [{"r": float(r), "P": float(p)} for r, p in zip(r_1d, P_r)]
 
-    data = [{"r": float(r), "P": float(p)} for r, p in zip(r_1d, P_r)]
+        max_idx = int(np.argmax(P_r))
 
-    max_idx = int(np.argmax(P_r))
+        return {
 
-    return {
+            "data": data,
 
-        "data": data,
+            "max_r": float(r_1d[max_idx])
 
-        "max_r": float(r_1d[max_idx])
+        }
 
-    }
+    except Exception as e:
+
+        import traceback
+
+        traceback.print_exc()
+
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 
