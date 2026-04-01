@@ -52,6 +52,7 @@ const getPointCountForN = (nValue) => {
 const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
   const { size, viewport } = useThree();
   const dpr = viewport.dpr || 1;
+  const intensityScale = Math.max(0, Math.min(1, opacity));
 
   const adaptivePointSize = useMemo(() => {
     const cssPixels = Math.max(1, size.width * size.height);
@@ -97,7 +98,7 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
         if (showPhase) {
             const r = Math.sqrt(x*x + y*y + z*z);
             const distanceFade = Math.max(0.1, 30.0 / (r + 30.0));
-            const intensity = Math.max(0.2, density * 5) * distanceFade;
+            const intensity = Math.max(0.2, density * 5) * distanceFade * intensityScale;
             const baseR = phase > 0 ? 1 : phaseNegR;
             const baseG = phase > 0 ? 0 : phaseNegG;
             const baseB = phase > 0 ? 0 : phaseNegB;
@@ -108,19 +109,19 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
         } else {
             if (density < 0.5) {
                 const t = density * 2.0;
-                col[idx + 0] = c1r + (c2r - c1r) * t;
-                col[idx + 1] = c1g + (c2g - c1g) * t;
-                col[idx + 2] = c1b + (c2b - c1b) * t;
+                col[idx + 0] = (c1r + (c2r - c1r) * t) * intensityScale;
+                col[idx + 1] = (c1g + (c2g - c1g) * t) * intensityScale;
+                col[idx + 2] = (c1b + (c2b - c1b) * t) * intensityScale;
             } else {
                 const t = (density - 0.5) * 2.0;
-                col[idx + 0] = c2r + (c3r - c2r) * t;
-                col[idx + 1] = c2g + (c3g - c2g) * t;
-                col[idx + 2] = c2b + (c3b - c2b) * t;
+                col[idx + 0] = (c2r + (c3r - c2r) * t) * intensityScale;
+                col[idx + 1] = (c2g + (c3g - c2g) * t) * intensityScale;
+                col[idx + 2] = (c2b + (c3b - c2b) * t) * intensityScale;
             }
         }
     }
     return { positions: pos, colors: col };
-  }, [data, showPhase]);
+  }, [data, showPhase, intensityScale]);
 
   if (!positions) return null;
 
@@ -143,12 +144,13 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
       <pointsMaterial
         size={adaptivePointSize}
         vertexColors={true}
-        transparent={true}
-        opacity={opacity}
+        transparent={false}
+        opacity={1}
         sizeAttenuation={true}
         map={circleTexture}
-        alphaTest={0.01}
-        depthWrite={false}
+        alphaTest={0.5}
+        depthWrite={true}
+        depthTest={true}
         toneMapped={false}
       />
     </points>
