@@ -14,21 +14,21 @@ import {
 } from 'recharts';
 import './App.css';
 
-// Create a synchronous circular texture for the points to match Plotly's markers
+// Create a circular sprite texture for classic hard-edged point rendering.
 const createCircleTexture = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 32;
-    const ctx = canvas.getContext('2d');
-    ctx.beginPath();
-    ctx.arc(16, 16, 15, 0, 2 * Math.PI);
-    ctx.fillStyle = 'white';
-    ctx.fill();
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    return texture;
+  const canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.beginPath();
+  ctx.arc(16, 16, 15, 0, 2 * Math.PI);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  return texture;
 };
 const circleTexture = createCircleTexture();
 
@@ -37,19 +37,37 @@ const PHASE_NEG_COLOR = new THREE.Color('#3333ff');
 const DENSITY_C1 = new THREE.Color('#30005c');
 const DENSITY_C2 = new THREE.Color('#c51b7d');
 const DENSITY_C3 = new THREE.Color('#ff8c00');
-const BASE_POINTS_FOR_N1 = 150000;
-const POINT_INCREMENT_PER_N = 400000;
-const MAX_TOTAL_POINTS = 5000000;
+const MAX_TOTAL_POINTS = 50000000;
 const BASE_POINT_SIZE = 0.1;
-const BOOSTED_POINT_SIZE = 0.2;
+const POINT_SIZE_DISTANCE_STEP = 20;
+const POINT_SIZE_STEP_INCREMENT = 0.05;
+const MAX_AUTO_POINT_SIZE = 0.25;
+const PHASE_INTENSITY_HARDLIMIT = 0.2;
+
+const getAutoPointSizeForDistance = (distance) => {
+  const safeDistance = Number.isFinite(distance) ? Math.max(0, distance) : 0;
+  const stepCount = Math.floor(safeDistance / POINT_SIZE_DISTANCE_STEP);
+  return Math.min(MAX_AUTO_POINT_SIZE, BASE_POINT_SIZE + stepCount * POINT_SIZE_STEP_INCREMENT);
+};
+
+const getPointRangeForN = (nValue) => {
+  if (nValue <= 4) return { min: 1000000, max: MAX_TOTAL_POINTS, defaultValue: 3000000, step: 100000 };
+  if (nValue <= 7) return { min: 10000000, max: MAX_TOTAL_POINTS, defaultValue: 15000000, step: 250000 };
+  return { min: 30000000, max: MAX_TOTAL_POINTS, defaultValue: 40000000, step: 500000 };
+};
 
 const getPointCountForN = (nValue) => {
-  return Math.min(MAX_TOTAL_POINTS, BASE_POINTS_FOR_N1 + Math.max(0, nValue - 1) * POINT_INCREMENT_PER_N);
+  return getPointRangeForN(nValue).defaultValue;
+};
+
+const clampPointCountForN = (nValue, count) => {
+  const range = getPointRangeForN(nValue);
+  return Math.max(range.min, Math.min(range.max, count));
 };
 
 // --- Reusable Three.js Components ---
 
-const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
+const ScatterPlot = ({ data, pointSize, opacity, showPhase, enableSimpleGlow }) => {
   const { size, viewport } = useThree();
   const dpr = viewport.dpr || 1;
   const intensityScale = Math.max(0, Math.min(1, opacity));
@@ -59,13 +77,16 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
     const areaScale = Math.sqrt(cssPixels / BASELINE_PIXELS);
     const dprScale = Math.max(1, Math.min(2.5, dpr));
     const visibilityScale = Math.max(1, areaScale * 0.85) * (1 + (dprScale - 1) * 0.25);
-    return pointSize * visibilityScale;
+    return Math.min(MAX_AUTO_POINT_SIZE, pointSize * visibilityScale);
   }, [pointSize, size.width, size.height, dpr]);
 
   const { positions, colors } = useMemo(() => {
-    if (!data || !data.points || data.points.length === 0) return { positions: null, colors: null };
-    
-    const count = data.points.length;
+    const hasFlatPoints = !!data && data.pointsFlat instanceof Float32Array && data.pointsFlat.length > 0;
+    const hasNestedPoints = !!data && Array.isArray(data.points) && data.points.length > 0;
+    if (!hasFlatPoints && !hasNestedPoints) return { positions: null, colors: null };
+
+    const pointStride = hasFlatPoints ? Math.max(5, Number(data.pointStride) || 5) : 5;
+    const count = hasFlatPoints ? Math.floor(data.pointsFlat.length / pointStride) : data.points.length;
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
 
@@ -83,22 +104,36 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
     const c3b = DENSITY_C3.b;
 
     for (let i = 0; i < count; i++) {
-        const point = data.points[i];
-        const x = point[0];
-        const y = point[1];
-        const z = point[2];
-        const density = point[3];
-        const phase = point[4];
+        let x;
+        let y;
+        let z;
+        let density;
+        let phase;
+        if (hasFlatPoints) {
+          const base = i * pointStride;
+          x = data.pointsFlat[base + 0];
+          y = data.pointsFlat[base + 1];
+          z = data.pointsFlat[base + 2];
+          density = data.pointsFlat[base + 3];
+          phase = data.pointsFlat[base + 4];
+        } else {
+          const point = data.points[i];
+          x = point[0];
+          y = point[1];
+          z = point[2];
+          density = point[3];
+          phase = point[4];
+        }
         const idx = i * 3;
+        const r = Math.sqrt(x*x + y*y + z*z);
 
         pos[idx + 0] = x;
         pos[idx + 1] = y;
         pos[idx + 2] = z;
 
         if (showPhase) {
-            const r = Math.sqrt(x*x + y*y + z*z);
             const distanceFade = Math.max(0.1, 30.0 / (r + 30.0));
-            const intensity = Math.max(0.2, density * 5) * distanceFade * intensityScale;
+          const intensity = Math.max(PHASE_INTENSITY_HARDLIMIT, density * 5) * distanceFade * intensityScale;
             const baseR = phase > 0 ? 1 : phaseNegR;
             const baseG = phase > 0 ? 0 : phaseNegG;
             const baseB = phase > 0 ? 0 : phaseNegB;
@@ -141,18 +176,34 @@ const ScatterPlot = ({ data, pointSize, opacity, showPhase }) => {
           itemSize={3}
         />
       </bufferGeometry>
-      <pointsMaterial
-        size={adaptivePointSize}
-        vertexColors={true}
-        transparent={false}
-        opacity={1}
-        sizeAttenuation={true}
-        map={circleTexture}
-        alphaTest={0.5}
-        depthWrite={true}
-        depthTest={true}
-        toneMapped={false}
-      />
+      {enableSimpleGlow ? (
+        <pointsMaterial
+          size={adaptivePointSize}
+          vertexColors={true}
+          transparent={true}
+          opacity={Math.min(1, 0.35 + opacity * 0.55)}
+          sizeAttenuation={true}
+          map={circleTexture}
+          alphaTest={0.35}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          depthTest={true}
+          toneMapped={false}
+        />
+      ) : (
+        <pointsMaterial
+          size={adaptivePointSize}
+          vertexColors={true}
+          transparent={false}
+          opacity={1}
+          sizeAttenuation={true}
+          map={circleTexture}
+          alphaTest={0.5}
+          depthWrite={true}
+          depthTest={true}
+          toneMapped={false}
+        />
+      )}
     </points>
   );
 };
@@ -286,12 +337,13 @@ const App = () => {
   // App Mode & Advanced
   const [mode, setMode] = useState('scatter'); 
   const [showPhase, setShowPhase] = useState(true);
+  const [enableSimpleGlow, setEnableSimpleGlow] = useState(false);
   const [gridSize, setGridSize] = useState(100);
   
   // Scatter Controls
   const [scatterGridRes, setScatterGridRes] = useState(120);
   const [numPoints, setNumPoints] = useState(getPointCountForN(3));
-  const [pointSize, setPointSize] = useState(0.10);
+  const [radialPeakDistance, setRadialPeakDistance] = useState(0);
   const [densityScale, setDensityScale] = useState(1.0);
   const [scatterOpacity, setScatterOpacity] = useState(0.8);
   
@@ -309,10 +361,12 @@ const App = () => {
 
   // Graph resizing state
   const [graphHeight, setGraphHeight] = useState(220);
+  const pointRange = useMemo(() => getPointRangeForN(n), [n]);
+  const pointSize = useMemo(() => getAutoPointSizeForDistance(radialPeakDistance), [radialPeakDistance]);
 
   const canvasDpr = useMemo(() => {
     const deviceDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-    const scatterDprCap = numPoints >= 350000 ? 1.35 : 1.5;
+    const scatterDprCap = numPoints >= 30000000 ? 1.0 : numPoints >= 10000000 ? 1.15 : numPoints >= 5000000 ? 1.25 : 1.35;
     const maxDpr = mode === 'scatter' ? scatterDprCap : 2;
     return [1, Math.min(deviceDpr, maxDpr)];
   }, [mode, numPoints]);
@@ -360,6 +414,9 @@ const App = () => {
       if (Array.isArray(radialJson.data)) {
         setRadialData(radialJson.data);
       }
+      if (typeof radialJson.max_r === 'number' && Number.isFinite(radialJson.max_r)) {
+        setRadialPeakDistance(radialJson.max_r);
+      }
 
       // Fetch 3D Data
       const params = new URLSearchParams({
@@ -373,6 +430,7 @@ const App = () => {
         params.append('resolution', scatterGridRes);
         params.append('num_points', numPoints);
         params.append('density_scale', densityScale);
+        params.append('binary', 'true');
         endpoint = '/scatter';
       } else {
         params.append('resolution', isoGridRes);
@@ -381,7 +439,22 @@ const App = () => {
       }
 
       const res3d = await fetch(`${API_BASE_URL}${endpoint}?${params.toString()}`);
-      const data3d = await parseApiResponse(res3d, '3D API');
+      let data3d;
+      if (mode === 'scatter') {
+        if (!res3d.ok) {
+          await parseApiResponse(res3d, '3D API');
+        }
+
+        const stride = Math.max(5, Number(res3d.headers.get('x-point-stride')) || 5);
+        const binaryPayload = await res3d.arrayBuffer();
+        const flatPoints = new Float32Array(binaryPayload);
+        if (flatPoints.length % stride !== 0) {
+          throw new Error('Scatter API returned malformed binary point data.');
+        }
+        data3d = { pointsFlat: flatPoints, pointStride: stride };
+      } else {
+        data3d = await parseApiResponse(res3d, '3D API');
+      }
       
       // Warn if arrays are empty 
       if (mode === 'isosurface' && (!data3d.surfaces || data3d.surfaces.length === 0)) {
@@ -430,21 +503,8 @@ const App = () => {
   }, [n]);
 
   useEffect(() => {
-    setNumPoints(getPointCountForN(n));
+    setNumPoints((prev) => clampPointCountForN(n, prev));
   }, [n]);
-
-  useEffect(() => {
-    if (m !== 0) return;
-
-    if (n > 4 && Math.abs(pointSize - BASE_POINT_SIZE) < 1e-6) {
-      setPointSize((prev) => (Math.abs(prev - BASE_POINT_SIZE) < 1e-6 ? BOOSTED_POINT_SIZE : prev));
-      return;
-    }
-
-    if (n <= 4 && Math.abs(pointSize - BOOSTED_POINT_SIZE) < 1e-6) {
-      setPointSize(BASE_POINT_SIZE);
-    }
-  }, [n, m, pointSize]);
 
   useEffect(() => {
     if (Math.abs(m) > l) setM(0);
@@ -661,6 +721,9 @@ const App = () => {
                 <label>
                   <input type="checkbox" checked={showPhase} onChange={e => setShowPhase(e.target.checked)} /> Show Wavefunction Phase
                 </label>
+                <label>
+                  <input type="checkbox" checked={enableSimpleGlow} onChange={e => setEnableSimpleGlow(e.target.checked)} /> Enable Simple Glow
+                </label>
                 <label>Grid Size: {gridSize} <input type="range" value={gridSize} min={5} max={100} onChange={e => setGridSize(parseInt(e.target.value))} /></label>
               </div>
 
@@ -670,8 +733,9 @@ const App = () => {
                 <div className="control-group">
                   <span style={{color:'#aaa', fontSize:'0.9rem'}}>Scatter Params</span>
                   <label>Resolution: {scatterGridRes} <input type="range" value={scatterGridRes} min={30} max={150} onChange={e => setScatterGridRes(parseInt(e.target.value))} /></label>
-                  <label>Points: {numPoints} <input type="range" value={numPoints} min={1000} max={MAX_TOTAL_POINTS} step={1000} onChange={e => setNumPoints(parseInt(e.target.value))} /></label>
-                  <label>Point Size: {pointSize.toFixed(2)} <input type="range" value={pointSize} min={0.1} max={10.0} step={0.1} onChange={e => setPointSize(parseFloat(e.target.value))} /></label>
+                  <label>Points: {numPoints.toLocaleString()} <input type="range" value={numPoints} min={pointRange.min} max={pointRange.max} step={pointRange.step} onChange={e => setNumPoints(parseInt(e.target.value, 10))} /></label>
+                  <span style={{color:'#777', fontSize:'0.8rem'}}>Allowed for n={n}: {pointRange.min.toLocaleString()} - {pointRange.max.toLocaleString()}</span>
+                  <span style={{color:'#777', fontSize:'0.8rem'}}>Auto Point Size: {pointSize.toFixed(2)} (+{POINT_SIZE_STEP_INCREMENT.toFixed(2)} every {POINT_SIZE_DISTANCE_STEP} units, max {MAX_AUTO_POINT_SIZE.toFixed(2)})</span>
                   <label>Density Pow: {densityScale.toFixed(1)} <input type="range" value={densityScale} min={0.1} max={2.0} step={0.1} onChange={e => setDensityScale(parseFloat(e.target.value))} /></label>
                   <label>Opacity: {scatterOpacity.toFixed(1)} <input type="range" value={scatterOpacity} min={0.1} max={1.0} step={0.1} onChange={e => setScatterOpacity(parseFloat(e.target.value))} /></label>
                 </div>
@@ -711,7 +775,7 @@ const App = () => {
                 <pointLight position={[-100, -100, -100]} intensity={0.5} />
                 
                 {plotData && (mode === 'scatter' ? (
-                  <ScatterPlot key={renderKey} data={plotData} pointSize={pointSize} opacity={scatterOpacity} showPhase={showPhase} />
+                  <ScatterPlot key={renderKey} data={plotData} pointSize={pointSize} opacity={scatterOpacity} showPhase={showPhase} enableSimpleGlow={enableSimpleGlow} />
                 ) : (
                   <IsosurfaceMesh key={renderKey} data={plotData} opacity={isoOpacity} showPhase={showPhase} isovalue={isovalue} />
                 ))}
