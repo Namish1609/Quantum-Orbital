@@ -21,18 +21,16 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 
-from grid.grid import cartesian_to_spherical
-
 from physics.hydrogen import hydrogen_wavefunction, radial_probability
-
-from visualization.isosurface import compute_isosurface
 
 
 
 app = FastAPI(title="Quantum Orbital API")
 
-MAX_ISOSURFACE_RESOLUTION = 160
 MAX_SCATTER_POINTS = 50000000
+SCATTER_RESOLUTION = 120
+SCATTER_DENSITY_SCALE = 1.0
+SCATTER_POINTS_STEP = 5000000
 CACHE_VERSION = 1
 CACHE_ROOT = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), 'cache', 'orbitals')))
 CACHE_MAX_SIZE_BYTES = int(os.getenv("ORBITAL_CACHE_MAX_BYTES", "8589934592"))
@@ -76,44 +74,18 @@ app.mount("/static", StaticFiles(directory=os.path.join(FRONTEND_BUILD_DIR, "sta
 
 @app.get("/")
 async def root():
-    return FileResponse(os.path.join(FRONTEND_BUILD_DIR, "index.html"))
-
-def compute_volume(n: int, l: int, m: int, Z: float, resolution: int, size: float):
-
-    # Cap resolution to prevent memory exhaustion, but allow enough for high-fidelity isosurfaces
-
-    res = min(resolution, MAX_ISOSURFACE_RESOLUTION)
-
-    lin = np.linspace(-size, size, res, dtype=np.float32)
-    x = lin[:, None, None]
-    y = lin[None, :, None]
-    z = lin[None, None, :]
-
-    # Build spherical coordinates directly from broadcasted axes to reduce peak memory pressure.
-    epsilon = np.float32(1e-12)
-    r = np.sqrt(x * x + y * y + z * z)
-    r_safe = np.where(r == 0, epsilon, r)
-    theta = np.arccos(np.clip(z / r_safe, -1.0, 1.0))
-    phi = np.arctan2(y, x)
-
-    psi = hydrogen_wavefunction(r, theta, phi, n, l, m, Z)
-    return lin, psi
+    return FileResponse(
+        os.path.join(FRONTEND_BUILD_DIR, "index.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
-def get_point_range_for_n(n: int):
-    if n <= 4:
-        return 1000000, MAX_SCATTER_POINTS
-    if n <= 7:
-        return 10000000, MAX_SCATTER_POINTS
-    return 30000000, MAX_SCATTER_POINTS
-
-
-def get_default_point_count_for_n(n: int):
-    if n <= 4:
-        return 3000000
-    if n <= 7:
-        return 15000000
-    return 40000000
+def get_point_count_for_n(n: int):
+    return min(MAX_SCATTER_POINTS, max(SCATTER_POINTS_STEP, n * SCATTER_POINTS_STEP))
 
 
 def _normalize_cache_value(value):
@@ -215,24 +187,6 @@ def _load_npz_cache(path: Path):
         return None
 
 
-def _save_json_cache(path: Path, payload: dict):
-    blob = json.dumps(payload, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
-    _save_npz_cache(path, {"blob": np.frombuffer(blob, dtype=np.uint8)})
-
-
-def _load_json_cache(path: Path):
-    cached = _load_npz_cache(path)
-    if cached is None or "blob" not in cached:
-        return None
-
-    try:
-        blob = cached["blob"].tobytes()
-        return json.loads(blob.decode("utf-8"))
-    except Exception:
-        _safe_unlink(path)
-        return None
-
-
 def _scatter_binary_response(points: np.ndarray) -> Response:
     points_f32 = points.astype(np.float32, copy=False)
     return Response(
@@ -258,13 +212,7 @@ def get_scatter(
 
     Z: float = Query(1.0, gt=0),
 
-    resolution: int = Query(40, le=200),
-
     size: float = Query(30.0, gt=0),
-
-    num_points: int | None = Query(None, ge=1000, le=MAX_SCATTER_POINTS),
-
-    density_scale: float = Query(1.0, gt=0),
 
     binary: bool = Query(False)
 
@@ -274,13 +222,9 @@ def get_scatter(
 
     if abs(m) > l: raise HTTPException(400, "m must be between -l and l.")
 
-    min_points, max_points = get_point_range_for_n(n)
-    requested_points = get_default_point_count_for_n(n) if num_points is None else num_points
-    if requested_points < min_points or requested_points > max_points:
-        raise HTTPException(
-            400,
-            f"num_points for n={n} must be between {min_points} and {max_points}."
-        )
+    resolution = SCATTER_RESOLUTION
+    density_scale = SCATTER_DENSITY_SCALE
+    requested_points = get_point_count_for_n(n)
 
     scatter_cache_params = {
         "n": n,
@@ -409,150 +353,6 @@ def get_scatter(
         return {"points": points.tolist()}
 
         
-
-    except Exception as e:
-
-        import traceback
-
-        traceback.print_exc()
-
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-
-@app.get("/isosurface")
-
-def get_isosurface(
-
-    n: int = Query(..., ge=1, le=10),
-
-    l: int = Query(..., ge=0),
-
-    m: int = Query(...),
-
-    Z: float = Query(1.0, gt=0),
-
-    resolution: int = Query(60, le=200),
-
-    size: float = Query(30.0, gt=0),
-
-    isovalue: float = Query(0.0025, gt=0),
-
-    show_phase: bool = Query(True)
-
-):
-
-    if l >= n: raise HTTPException(400, "l must be strict less than n.")
-
-    if abs(m) > l: raise HTTPException(400, "m must be between -l and l.")
-
-    isosurface_cache_params = {
-        "n": n,
-        "l": l,
-        "m": m,
-        "Z": Z,
-        "resolution": resolution,
-        "size": size,
-        "isovalue": isovalue,
-        "show_phase": show_phase,
-    }
-    isosurface_cache_file = _cache_path("isosurface", isosurface_cache_params)
-    cached_isosurface = _load_json_cache(isosurface_cache_file)
-    if cached_isosurface is not None and "surfaces" in cached_isosurface:
-        return cached_isosurface
-
-
-
-    try:
-
-        lin, psi = compute_volume(n, l, m, Z, resolution, size)
-
-        
-
-        density = np.abs(psi)**2
-
-        
-
-        d_max = np.max(density)
-
-        if d_max > 0:
-
-            density = density / d_max
-
-            
-
-        surfaces = []
-
-        try:
-
-            # We compute the isosurface on the NORMALIZED density [0, 1]
-
-            # The isovalue slider corresponds to a percentage of the peak probability density.
-
-            verts, faces, _, _ = compute_isosurface(density, lin, isovalue)
-
-            if verts is not None:
-
-                if show_phase:
-
-                    # Evaluate wavefunction phase at precise vertex locations
-
-                    r_v, theta_v, phi_v = cartesian_to_spherical(verts[:, 0], verts[:, 1], verts[:, 2])
-
-                    psi_v = hydrogen_wavefunction(r_v, theta_v, phi_v, n, l, m, Z)
-
-                    phases = np.sign(np.real(psi_v))
-
-                    
-
-                    colors = np.zeros((len(verts), 3), dtype=np.float32)
-
-                    colors[phases > 0] = [1.0, 0.2, 0.2]  # Red for positive
-
-                    colors[phases <= 0] = [0.2, 0.2, 1.0] # Blue for negative
-
-                    
-
-                    surfaces.append({
-
-                        "vertices": verts.tolist(),
-
-                        "faces": faces.flatten().tolist(),
-
-                        "vertex_colors": colors.flatten().tolist()
-
-                    })
-
-                else:
-
-                    surfaces.append({
-
-                        "vertices": verts.tolist(),
-
-                        "faces": faces.flatten().tolist(),
-
-                        "color": "#00ffff"
-
-                    })
-
-        except Exception as e:
-
-            # marching_cubes fails if isovalue is outside data range, this is fine just return empty
-
-            pass
-
-        response_payload = {"surfaces": surfaces}
-        _save_json_cache(isosurface_cache_file, response_payload)
-        return response_payload
-
-
-
-    except MemoryError:
-
-        raise HTTPException(
-            status_code=503,
-            detail="Insufficient memory for this isosurface request. Try reducing resolution or grid size."
-        )
 
     except Exception as e:
 
