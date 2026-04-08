@@ -5,11 +5,14 @@ import * as THREE from 'three';
 import {
   LineChart,
   Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Legend
 } from 'recharts';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
@@ -349,6 +352,443 @@ const FullAxes = ({ size }) => {
   );
 };
 
+const quantumSymbolCards = [
+  {
+    symbol: 'n',
+    title: 'Principal Quantum Number',
+    range: 'n = 1, 2, 3, ...',
+    insight: 'Sets shell size and energy level depth.',
+  },
+  {
+    symbol: 'l',
+    title: 'Azimuthal Quantum Number',
+    range: '0 <= l <= n - 1',
+    insight: 'Controls orbital family and angular nodes.',
+  },
+  {
+    symbol: 'm',
+    title: 'Magnetic Quantum Number',
+    range: '-l <= m <= l',
+    insight: 'Defines orientation relative to chosen axis.',
+  },
+  {
+    symbol: 'Z',
+    title: 'Nuclear Charge',
+    range: 'Z >= 1',
+    insight: 'Higher Z contracts orbitals and raises binding energy.',
+  },
+];
+
+const classicalVsQuantumRows = [
+  {
+    topic: 'Electron Behavior',
+    classical: 'Point particle on deterministic orbit',
+    quantum: 'Wavefunction with probabilistic localization',
+  },
+  {
+    topic: 'Allowed States',
+    classical: 'Any radius and energy in principle',
+    quantum: 'Discrete energy eigenstates from boundary conditions',
+  },
+  {
+    topic: 'Visual Output',
+    classical: 'Single line trajectory',
+    quantum: '3D cloud with nodes, phase, and symmetry',
+  },
+  {
+    topic: 'Chemical Meaning',
+    classical: 'Poor predictor of bonding',
+    quantum: 'Explains bonding, geometry, spectra, and trends',
+  },
+];
+
+const orbitalFamilyRows = [
+  {
+    family: 's',
+    l: '0',
+    geometry: 'Spherical shell',
+    keyUse: 'Core shielding and sigma bonding',
+  },
+  {
+    family: 'p',
+    l: '1',
+    geometry: 'Two-lobed dumbbell',
+    keyUse: 'Directional covalent and pi interactions',
+  },
+  {
+    family: 'd',
+    l: '2',
+    geometry: 'Clover / torus hybrid forms',
+    keyUse: 'Transition metals, splitting, catalysis',
+  },
+  {
+    family: 'f',
+    l: '3',
+    geometry: 'Multi-lobed high-order surfaces',
+    keyUse: 'Lanthanides, actinides, magnetic behavior',
+  },
+];
+
+const simulatorControlRows = [
+  {
+    control: 'n slider',
+    effect: 'Expands shell and adds radial complexity',
+    expectedVisual: 'Larger orbital envelope with extra nodal rings',
+  },
+  {
+    control: 'l slider',
+    effect: 'Changes angular momentum family',
+    expectedVisual: 'Spherical to directional lobe transitions',
+  },
+  {
+    control: 'm slider',
+    effect: 'Rotates orientation basis',
+    expectedVisual: 'Different axis alignment for the same family',
+  },
+  {
+    control: 'Show Phase',
+    effect: 'Reveals sign of wavefunction',
+    expectedVisual: 'Red and blue regions split by nodal boundaries',
+  },
+  {
+    control: 'Slice View',
+    effect: 'Cuts through volume along selected axis',
+    expectedVisual: 'Interior nodal surfaces become immediately visible',
+  },
+];
+
+const energyProfileData = [
+  { shell: 'n=1', radius: 14, density: 92 },
+  { shell: 'n=2', radius: 29, density: 74 },
+  { shell: 'n=3', radius: 42, density: 58 },
+  { shell: 'n=4', radius: 56, density: 44 },
+  { shell: 'n=5', radius: 71, density: 35 },
+  { shell: 'n=6', radius: 88, density: 27 },
+];
+
+const orbitalComplexityData = [
+  { orbital: 's', nodes: 1, directionality: 2, chemistry: 7 },
+  { orbital: 'p', nodes: 3, directionality: 6, chemistry: 8 },
+  { orbital: 'd', nodes: 6, directionality: 8, chemistry: 9 },
+  { orbital: 'f', nodes: 9, directionality: 9, chemistry: 10 },
+];
+
+const phaseInsightData = [
+  { metric: 'Bonding Overlap', positive: 92, negative: 40 },
+  { metric: 'Interference Risk', positive: 35, negative: 88 },
+  { metric: 'Spectral Signature', positive: 76, negative: 70 },
+  { metric: 'Spatial Contrast', positive: 81, negative: 84 },
+  { metric: 'Learning Clarity', positive: 86, negative: 71 },
+];
+
+const workflowChartData = [
+  { step: 'Choose State', confidence: 18 },
+  { step: 'Apply Changes', confidence: 35 },
+  { step: 'Inspect Shape', confidence: 58 },
+  { step: 'Toggle Phase', confidence: 76 },
+  { step: 'Slice + Compare', confidence: 91 },
+];
+
+const quickLinks = [
+  { id: 'welcome', label: 'Welcome & Math' },
+  { id: 'chemistry', label: 'Chemistry Concepts' },
+  { id: 'howto', label: 'How To Use' },
+  { id: 'simulator', label: 'Simulator' },
+];
+
+const chartTooltipStyle = {
+  backgroundColor: '#0f1722',
+  border: '1px solid #2f4c6a',
+  borderRadius: '10px',
+  color: '#eaf4ff',
+};
+
+const AnimatedSection = ({ children, className = '' }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const domRef = useRef();
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      setIsVisible(entries[0].isIntersecting);
+    }, { threshold: 0.1 });
+
+    if (domRef.current) observer.observe(domRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={domRef} className={`fade-in-section ${isVisible ? 'is-visible' : ''} ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+const InfoSection = ({ title, subtitle, children }) => (
+  <AnimatedSection className="info-section">
+    <div className="info-section-heading">
+      <h2>{title}</h2>
+      {subtitle && <p>{subtitle}</p>}
+    </div>
+    {children}
+  </AnimatedSection>
+);
+
+const ExpandableFormula = ({ math, className = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const closeTimerRef = useRef(null);
+
+  useEffect(() => () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+  }, []);
+
+  const openFormula = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setIsClosing(false);
+    setIsOpen(true);
+  };
+
+  const closeFormula = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    closeTimerRef.current = setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+      closeTimerRef.current = null;
+    }, 220);
+  };
+
+  return (
+    <>
+      <div className={`math-card ${className}`.trim()}>
+        <button className="formula-expand-btn" type="button" onClick={openFormula} aria-label="Expand formula">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M8 3H3v5"></path>
+            <line x1="3" y1="3" x2="10" y2="10"></line>
+            <path d="M16 21h5v-5"></path>
+            <line x1="14" y1="14" x2="21" y2="21"></line>
+          </svg>
+        </button>
+        <BlockMath math={math} />
+      </div>
+
+      {isOpen && (
+        <div className={`formula-modal-backdrop ${isClosing ? 'is-closing' : 'is-open'}`} onClick={closeFormula} role="dialog" aria-modal="true">
+          <div className={`formula-modal ${isClosing ? 'is-closing' : 'is-open'}`} onClick={(event) => event.stopPropagation()}>
+            <button className="formula-close-btn" type="button" onClick={closeFormula} aria-label="Close expanded formula">
+              x
+            </button>
+            <BlockMath math={math} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+const SymbolCardVertical = () => (
+  <div className="symbol-vertical-list">
+    <article className="glass-card flex-row-card">
+      <div className="orbital-symbol symbol-n">
+        <div className="circle-ring r1"></div>
+        <div className="circle-ring r2"></div>
+        <div className="circle-ring r3"></div>
+      </div>
+      <div className="orbital-info">
+        <h3>Principal Quantum Number (<InlineMath math={'n'} /> = 1, 2, 3...)</h3>
+        <p><strong>Energy & Distance.</strong> Determines the overall size and energy of the orbital. As <InlineMath math={'n'} /> increases, the electron spends more time further from the nucleus, meaning higher energy and less stability. Also defines the total number of nodes (<InlineMath math={'n - 1'} />).</p>
+      </div>
+    </article>
+
+    <article className="glass-card flex-row-card">
+      <div className="orbital-symbol symbol-l">
+        <svg width="40" height="40" viewBox="0 0 120 70" style={{ transform: 'scale(1.2)' }}>
+          <path d="M 10 60 A 50 50 0 0 1 110 60 Z" fill="none" stroke="currentColor" strokeWidth="3"/>
+          <line x1="5" y1="60" x2="115" y2="60" stroke="currentColor" strokeWidth="3"/>
+          <line x1="60" y1="60" x2="60" y2="5" stroke="currentColor" strokeWidth="3" strokeDasharray="4 4"/>
+          <line x1="60" y1="60" x2="10" y2="10" stroke="#ff3b6a" strokeWidth="3"/>
+          <path d="M 40 40 Q 50 30 60 40" fill="none" stroke="#fff" strokeWidth="2"/>
+          <circle cx="60" cy="60" r="4" fill="#fff"/>
+        </svg>
+      </div>
+      <div className="orbital-info">
+        <h3>Angular Momentum Number (<InlineMath math={'l'} /> = 0, ..., <InlineMath math={'n-1'} />)</h3>
+        <p><strong>Shape & Subshell.</strong> Dictates the geometry of the probability cloud (s, p, d, f) and tells us the exact number of angular nodes. <InlineMath math={'l=0'} /> is spherical, <InlineMath math={'l=1'} /> has lobes, <InlineMath math={'l=2'} /> has clover shapes, etc. Fundamental to chemical bonding directionality.</p>
+      </div>
+    </article>
+
+    <article className="glass-card flex-row-card">
+      <div className="orbital-symbol symbol-m">
+        <div className="compass">
+          <div className="needle top"></div>
+          <div className="needle bottom"></div>
+        </div>
+      </div>
+      <div className="orbital-info">
+        <h3>Magnetic Quantum Number (<InlineMath math={'m_l'} /> = <InlineMath math={'-l'} /> to <InlineMath math={'+l'} />)</h3>
+        <p><strong>Spatial Orientation.</strong> Determines exactly how the orbital aligns in 3D space along the x, y, and z axes. Gives rise to the degenerate orbital sets, e.g. the 3 distinct <InlineMath math={'p'} /> orbitals or 5 distinct <InlineMath math={'d'} /> orbitals interacting with a magnetic field.</p>
+      </div>
+    </article>
+
+    <article className="glass-card flex-row-card">
+      <div className="orbital-symbol symbol-z">
+        <div className="nucleus-dot"></div>
+        <div className="electron-orbit o1"></div>
+        <div className="electron-orbit o2"></div>
+        <div className="electron-orbit o3"></div>
+      </div>
+      <div className="orbital-info">
+        <h3>Atomic Number (<InlineMath math={'Z'} />)</h3>
+        <p><strong>Nuclear Charge.</strong> Represents the number of protons in the nucleus. A higher <InlineMath math={'Z'} /> increases electrostatic pull, dramatically contracting the orbital size and lowering its energy. This parameter proves why heavier elements have incredibly compact deeper inner shells.</p>
+      </div>
+    </article>
+  </div>
+);
+
+const SymbolCardGrid = () => (
+  <div className="symbol-grid">
+    {quantumSymbolCards.map((card) => (
+      <article className="symbol-card" key={card.symbol}>
+        <div className="symbol-mark">{card.symbol}</div>
+        <h3>{card.title}</h3>
+        <p className="symbol-range">{card.range}</p>
+        <p>{card.insight}</p>
+      </article>
+    ))}
+  </div>
+);
+
+const DataTable = ({ columns, rows, caption }) => (
+  <div className="table-wrap">
+    <table className="quantum-table">
+      {caption && <caption>{caption}</caption>}
+      <thead>
+        <tr>
+          {columns.map((column) => (
+            <th key={column}>{column}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={Object.values(row).join('-')}>
+            {Object.values(row).map((value) => (
+              <td key={String(value)}>{value}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const InfoFooter = ({ onNavigate }) => (
+  <footer className="site-footer">
+    <div className="site-footer-grid">
+      <section className="footer-about">
+        <h3>About</h3>
+        <p>
+          Quantum Orbital Explorer is an educational visualization studio for understanding Schrodinger solutions,
+          orbital topology, and chemistry-ready intuition.
+        </p>
+      </section>
+
+      <section className="footer-links">
+        <h3>Quick Links</h3>
+        <div className="footer-link-list">
+          {quickLinks.map((link) => (
+            <button
+              className="footer-link-button"
+              key={link.id}
+              onClick={() => onNavigate(link.id)}
+              type="button"
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="footer-contact">
+        <h3>Contact</h3>
+        <div className="contact-inline">
+          <span className="contact-chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.8 19.8 0 0 1 3.1 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.62a2 2 0 0 1-.45 2.11L9.02 10.68a16 16 0 0 0 4.3 4.3l1.23-1.23a2 2 0 0 1 2.11-.45c.84.29 1.72.5 2.62.62A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+            +91 7411515850
+          </span>
+          <span className="contact-chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
+              <polyline points="3 7 12 13 21 7"></polyline>
+            </svg>
+            navion.team.official@gmail.com
+          </span>
+          <span className="contact-chip">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
+              <polyline points="3 7 12 13 21 7"></polyline>
+            </svg>
+            labs@quantum-orbital-explorer.local
+          </span>
+        </div>
+        <p className="contact-hours">Response Window: Monday to Friday, 09:00-18:00 UTC</p>
+      </section>
+
+      <section className="footer-privacy">
+        <h3>Privacy Policy</h3>
+        <p>No account is required to run simulations.</p>
+        <p>Input parameters are processed to generate orbital visuals and are not sold to third parties.</p>
+        <p>Operational logs are retained briefly to maintain reliability and performance.</p>
+      </section>
+    </div>
+    <div className="site-footer-bottom">
+      <span>2026 Quantum Orbital Explorer. Built for education, labs, and modern chemistry classrooms.</span>
+    </div>
+  </footer>
+);
+
+const InfoPageLayout = ({ eyebrow, title, message, children, onNavigate, ctaLabel, ctaTarget, heroClassName = '' }) => (
+  <div className="info-page-shell">
+    {/* Left Fixed Ad Sidebar */}
+    <aside className="ad-sidebar ad-sidebar-left">
+      <div className="ad-content">
+        <span>Ad Space</span>
+      </div>
+    </aside>
+
+    <main className="page-style">
+      <header className={`hero-panel ${heroClassName}`.trim()}>
+        <p className="hero-eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
+        <p className="hero-message">{message}</p>
+        {ctaLabel && ctaTarget && (
+          <button className="hero-cta" onClick={() => onNavigate(ctaTarget)} type="button">
+            {ctaLabel}
+          </button>
+        )}
+      </header>
+
+      {children}
+    </main>
+
+    {/* Right Fixed Ad Sidebar */}
+    <aside className="ad-sidebar ad-sidebar-right">
+      <div className="ad-content">
+        <span>Ad Space</span>
+      </div>
+    </aside>
+
+    <InfoFooter onNavigate={onNavigate} />
+  </div>
+);
+
 // --- Main App Component ---
 
 const App = () => {
@@ -571,7 +1011,7 @@ const App = () => {
   return (
     <>
       {/* Top Navigation Bar */}
-      <div className="top-nav">
+      <div className={`top-nav ${currentPage === 'simulator' ? 'top-nav-simulator' : ''}`}>
         <h3>Quantum Orbital Explorer</h3>
         <div className="top-nav-buttons">
           <button onClick={() => setCurrentPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome & Math</button>
@@ -581,182 +1021,309 @@ const App = () => {
         </div>
       </div>
 
-      {(currentPage === 'welcome' || currentPage === 'chemistry' || currentPage === 'howto') && (
-        <>
-          <div className="info-side-ad info-side-ad-left" aria-label="Left ad panel">
-            <div className="info-side-ad-title">Ad Space</div>
-            <div className="info-side-ad-body">Sponsored Panel</div>
-          </div>
-          <div className="info-side-ad info-side-ad-right" aria-label="Right ad panel">
-            <div className="info-side-ad-title">Ad Space</div>
-            <div className="info-side-ad-body">Sponsored Panel</div>
-          </div>
-        </>
-      )}
-
       {currentPage === 'welcome' && (
-        <div style={pageStyle} className="page-style">
-          <h1>Welcome to the Quantum Orbital Explorer</h1>
-          <p>Welcome to an interactive journey into the quantum world of atoms.</p>
-          <p>This platform is designed to help students, educators, chemistry enthusiasts, and researchers visualize one of the most important concepts in modern physics and chemistry: the spatial probability distribution of electrons around an atomic nucleus.</p>
-          <p>Unlike classical physics, electrons do not move in fixed circular paths around the nucleus like planets orbiting the sun. Instead, quantum mechanics describes electrons as wave-like entities whose locations can only be predicted probabilistically.</p>
-          <p>This simulator transforms those mathematical probability distributions into beautiful three-dimensional visual models so that abstract equations become visually intuitive.</p>
-          
-          <h2>The Mathematical Foundation</h2>
-          <p>The entire simulation is based on the exact analytical solutions of the time-independent Schrödinger equation for hydrogen-like atoms.</p>
-          <p>The equation is:</p>
-          <div style={mathStyles}>
-            <BlockMath math={'\\hat{H}\\psi = E\\psi'} />
-          </div>
-          <p>Here:</p>
-          <ul>
-            <li><InlineMath math={'\\hat{H}'} /> is the Hamiltonian operator</li>
-            <li><InlineMath math={'\\psi'} /> is the wavefunction</li>
-            <li><InlineMath math={'E'} /> is the energy eigenvalue</li>
-          </ul>
-          
-          <p>
-            For a single-electron atom, such as hydrogen, this equation can be solved exactly. Because atoms possess spherical symmetry,
-            spherical coordinates are the natural coordinate system: <InlineMath math={'(r,\\theta,\\phi)'} />
-          </p>
-          
-          <p>The total wavefunction is written as:</p>
-          <div style={mathStyles}>
-            <BlockMath math={'\\psi_{n,\\ell,m}(r,\\theta,\\phi)=R_{n,\\ell}(r)\\,Y_{\\ell,m}(\\theta,\\phi)'} />
-          </div>
-          <p>This means the solution separates into two physically meaningful parts.</p>
+        <InfoPageLayout
+          eyebrow="Interactive Quantum Learning Platform"
+          title="See Orbitals Like a Professional Science Product"
+          message="Turn equations into rich 3D intuition with visual storytelling, symbol boxes, and decision-ready comparison views inspired by modern product design."
+          heroClassName="hero-welcome"
+          onNavigate={setCurrentPage}
+          ctaLabel="Continue to Chemistry Concepts"
+          ctaTarget="chemistry"
+        >
+          <InfoSection
+            title="The Equation Driving The Simulator"
+            subtitle="The model is built from exact hydrogenic solutions in spherical coordinates."
+          >
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <p>
+                  The time-independent Schrodinger equation gives the stationary states for one-electron atoms:
+                </p>
+                <ExpandableFormula math={'\\hat{H}\\psi = E\\psi'} />
+                <p>
+                  The total wavefunction separates naturally into radial and angular components:
+                </p>
+                <ExpandableFormula math={'\\psi_{n,\\ell,m}(r,\\theta,\\phi)=R_{n,\\ell}(r)\\,Y_{\\ell,m}(\\theta,\\phi)'} />
+                <p>
+                  Probability density is measured through <InlineMath math={'|\\psi|^2'} />, which is what your scatter cloud approximates.
+                </p>
+              </article>
 
-          <h3>Radial Part: <InlineMath math={'R_{n,\\ell}(r)'} /></h3>
-          <p>This determines how the electron probability changes as we move farther from the nucleus. It controls:</p>
-          <ul>
-            <li>orbital size</li>
-            <li>radial nodes</li>
-            <li>shell expansion</li>
-          </ul>
+              <article className="glass-card chart-card">
+                <h3>Shell Growth vs Relative Density</h3>
+                <ResponsiveContainer width="100%" height={260}>
+                  <AreaChart data={energyProfileData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="radiusGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#30c6ff" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="#30c6ff" stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="#2f4660" strokeDasharray="4 4" />
+                    <XAxis dataKey="shell" stroke="#a7c9e8" />
+                    <YAxis stroke="#a7c9e8" />
+                    <Tooltip contentStyle={chartTooltipStyle} />
+                    <Legend />
+                    <Area type="monotone" dataKey="radius" name="Relative Radius" stroke="#30c6ff" fill="url(#radiusGradient)" strokeWidth={2.2} />
+                    <Line type="monotone" dataKey="density" name="Relative Density" stroke="#ffd265" strokeWidth={2} dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </article>
+            </div>
+          </InfoSection>
 
-          <h3>Angular Part: <InlineMath math={'Y_{\\ell,m}(\\theta,\\phi)'} /></h3>
-          <p>These are spherical harmonics. They determine:</p>
-          <ul>
-            <li>shape of lobes</li>
-            <li>orientation in 3D space</li>
-            <li>nodal planes</li>
-          </ul>
+          <InfoSection
+            title="Deciphering The Quantum Numbers"
+            subtitle="The four fundamental parameters of the quantum model."
+          >
+            <SymbolCardVertical />
+          </InfoSection>
 
-          <h2>Quantum Numbers</h2>
-          <p>The wavefunction depends on three quantum numbers.</p>
+          <InfoSection
+            title="Radial & Angular Separability"
+            subtitle="How we construct volumetric regions mathematically."
+          >
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <h3>The Radial Function <InlineMath math={'R_{n, l}(r)'} /></h3>
+                <p>Governs the amplitude of the electron's distance <InlineMath math={'r'} /> from the nucleus. Built from Laguerre polynomials.</p>
+                <ExpandableFormula className="compact" math={'R_{n,l}(r) = \\sqrt{\\left(\\frac{2Z}{n a_0}\\right)^3 \\dots} e^{-\\frac{Zr}{na_0}} L_{n-l-1}^{2l+1}\\left(\\frac{2Zr}{na_0}\\right)'} />
+                <p>Features include exponential decay towards infinity and oscillating zeroes (radial nodes).</p>
+              </article>
 
-          <h3>Principal Quantum Number (<InlineMath math={'n'} />)</h3>
-          <p>This determines the main energy level. Higher <strong>n</strong> means:</p>
-          <ul>
-            <li>larger orbitals</li>
-            <li>more nodes</li>
-            <li>higher energy</li>
-          </ul>
-          <p><InlineMath math={'n=1\\to\\text{K shell},\\;n=2\\to\\text{L shell},\\;n=3\\to\\text{M shell}'} /></p>
-
-          <h3>Azimuthal Quantum Number (<InlineMath math={'\\ell'} />)</h3>
-          <p>This defines the shape.</p>
-          <ul>
-            <li><InlineMath math={'\\ell=0'} /> &rarr; s orbital</li>
-            <li><InlineMath math={'\\ell=1'} /> &rarr; p orbital</li>
-            <li><InlineMath math={'\\ell=2'} /> &rarr; d orbital</li>
-            <li><InlineMath math={'\\ell=3'} /> &rarr; f orbital</li>
-          </ul>
-
-          <h3>Magnetic Quantum Number (<InlineMath math={'m'} />)</h3>
-          <p>This determines the orientation of the orbital in space. It changes how the orbital rotates and aligns along different axes.</p>
-
-          <h2>Probability Density</h2>
-          <p>The measurable quantity is not the wavefunction itself but its magnitude squared.</p>
-          <div style={mathStyles}>
-            <BlockMath math={'P(r,\\theta,\\phi)=|\\psi|^2'} />
-          </div>
-          <p>This gives the probability density. Dense regions correspond to places where the electron is more likely to be found.</p>
-
-          <h2>Why This Matters</h2>
-          <p>This mathematical model forms the foundation of atomic structure, chemical bonding, spectroscopy, quantum chemistry, molecular orbital theory, and periodic table trends.</p>
-          <p>Every modern chemistry concept ultimately originates from these equations.</p>
-          
-          <button onClick={() => setCurrentPage('chemistry')} style={nextButton}>Continue to Chemistry Concepts</button>
-        </div>
+              <article className="glass-card">
+                <h3>Spherical Harmonics <InlineMath math={'Y_{l, m}(\\theta, \\phi)'} /></h3>
+                <p>Controls the angular distribution around the nucleus using Legendre polynomials. This generates the familiar orbital shapes.</p>
+                <ExpandableFormula className="compact harmonic-compact" math={'Y_{l,m}(\\theta,\\phi) = \\sqrt{\\frac{(2l+1)}{4\\pi}\\frac{(l-m)!}{(l+m)!}} P_l^m(\\cos\\theta) e^{im\\phi}'} />
+                <p>Phase rules dictate structural geometry and directivity, key components in chemistry.</p>
+              </article>
+            </div>
+          </InfoSection>
+        </InfoPageLayout>
       )}
 
       {currentPage === 'chemistry' && (
-        <div style={pageStyle} className="page-style">
-          <h1>Chemistry Concepts</h1>
-          <p>Atomic orbitals are one of the most important concepts in chemistry. They explain how atoms bond, why molecules take specific shapes, and why different elements behave differently.</p>
-          <p>Orbitals are NOT physical paths. They are probability regions derived from the quantum mechanical wavefunction. These regions indicate where electrons are most likely to be found.</p>
+        <InfoPageLayout
+          eyebrow="Quantum Foundations"
+          title="Orbital Structures and Wavefunction Phase"
+          message="Understand the building blocks of matter. By mapping atomic orbitals and phase, we can predict bonding, geometry, and chemical reactivity."
+          heroClassName="hero-chemistry"
+          onNavigate={setCurrentPage}
+          ctaLabel="Continue to How To Use"
+          ctaTarget="howto"
+        >
+          <InfoSection
+            title="The Orbital Families"
+            subtitle="The shape and energy of probability clouds are defined by quantum numbers."
+          >
+            <div className="info-grid">
+              <article className="glass-card flex-row-card">
+                <div className="orbital-symbol s-orbital">
+                  <div className="shape-sphere"></div>
+                </div>
+                <div className="orbital-info">
+                  <h3>s Orbitals (<InlineMath math={'l = 0'} />)</h3>
+                  <p><strong>Spherical shell.</strong> The simplest orbital shape with radial symmetry. They form the core layers of atoms and participate in direct sigma (<InlineMath math={'\\sigma'} />) bonds.</p>
+                </div>
+              </article>
+              <article className="glass-card flex-row-card">
+                <div className="orbital-symbol p-orbital">
+                  <div className="shape-lobe top-lobe"></div>
+                  <div className="shape-lobe bottom-lobe"></div>
+                </div>
+                <div className="orbital-info">
+                  <h3>p Orbitals (<InlineMath math={'l = 1'} />)</h3>
+                  <p><strong>Two-lobed dumbbell.</strong> They feature one angular node separating two phases. Essential for directional covalent bonding and pi (<InlineMath math={'\\pi'} />) interactions.</p>
+                </div>
+              </article>
+              <article className="glass-card flex-row-card">
+                <div className="orbital-symbol d-orbital">
+                  <div className="shape-clover"></div>
+                </div>
+                <div className="orbital-info">
+                  <h3>d Orbitals (<InlineMath math={'l = 2'} />)</h3>
+                  <p><strong>Clover / torus hybrid forms.</strong> Encountering two angular nodes, they drive transition metal chemistry, ligand field splitting, and catalysis.</p>
+                </div>
+              </article>
+              <article className="glass-card flex-row-card">
+                <div className="orbital-symbol f-orbital">
+                  <div className="shape-complex"></div>
+                </div>
+                <div className="orbital-info">
+                  <h3>f Orbitals (<InlineMath math={'l = 3'} />)</h3>
+                  <p><strong>Multi-lobed high-order surfaces.</strong> Featuring three angular nodes, these buried valence layers are responsible for lanthanides, actinides, and complex magnetic behavior.</p>
+                </div>
+              </article>
+            </div>
+          </InfoSection>
 
-          <h2>s Orbitals</h2>
-          <p>s orbitals correspond to: <InlineMath math={'\\ell=0'} /></p>
-          <p>These are spherical. Because they are perfectly symmetric, they play a major role in the hydrogen atom, alkali metals, and sigma bonding. Examples: 1s, 2s, 3s. Higher s orbitals contain radial nodes.</p>
+          <InfoSection
+            title="Understanding Wavefunction Phase"
+            subtitle="Regions of probability across complex geometries."
+          >
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <h3>Radial Nodes</h3>
+                <p>
+                  Radial nodes are spherical shells where the radial wavefunction becomes zero.
+                  They are controlled by <InlineMath math={'n-l-1'} /> and appear as concentric zero-probability boundaries moving outward from the nucleus.
+                </p>
+              </article>
 
-          <h2>p Orbitals</h2>
-          <p>p orbitals correspond to: <InlineMath math={'\\ell=1'} /></p>
-          <p>These are dumbbell shaped. They contain one angular nodal plane. There are three orientations: <InlineMath math={'p_x,\\;p_y,\\;p_z'} />.</p>
-          <p>These orbitals are fundamental for covalent bonding, pi bonds, and molecular geometry.</p>
+              <article className="glass-card">
+                <h3>Angular Nodes</h3>
+                <p>
+                  Angular nodes are planar or conical surfaces determined by the spherical harmonics.
+                  Their count equals <InlineMath math={'l'} />, and they split orbitals into directional lobes with alternating phase.
+                </p>
+              </article>
+            </div>
+          </InfoSection>
 
-          <h2>d Orbitals</h2>
-          <p>d orbitals correspond to: <InlineMath math={'\\ell=2'} /></p>
-          <p>These are more complex. Common shapes include four-lobed clover structures and dumbbell plus torus ring structures.</p>
-          <p>These are extremely important in transition metal chemistry, crystal field splitting, catalysts, and magnetic materials.</p>
+          <InfoSection title="Phase Interference Comparison">
+            <DataTable
+              columns={["Wavefunction Interaction", "Phase Match", "Quantum Interference", "Chemical Outcome"]}
+              rows={[
+                ["Positive / Positive (+ / +)", "Matching signs", "Amplitudes add together", "Forms a stable bonding orbital"],
+                ["Negative / Negative (- / -)", "Matching signs", "Amplitudes add together", "Forms a stable bonding orbital"],
+                ["Positive / Negative (+ / -)", "Opposite signs", "Amplitudes cancel out (\u03c8 = 0)", "Forms a repulsive anti-bonding orbital"],
+                ["Node Existence", "Zero crossing points", "Probability is exactly zero", "Divides regions of opposite phase"]
+              ]}
+            />
+          </InfoSection>
 
-          <h2>f Orbitals</h2>
-          <p>f orbitals correspond to: <InlineMath math={'\\ell=3'} /></p>
-          <p>These are highly complex multi-lobed structures. They are essential in lanthanides, actinides, and rare earth chemistry. These explain the unique electronic and magnetic properties of heavy elements.</p>
-
-          <h2>Nodes</h2>
-          <p>Nodes are regions where the probability is zero. At these points: <InlineMath math={'\\psi=0'} />. No electron can exist there. There are two major types: radial nodes and angular nodes.</p>
-
-          <h2>Wavefunction Phase</h2>
-          <p>The wavefunction <InlineMath math={'\\psi'} /> has sign. Positive and negative signs represent phase. In your simulator:</p>
-          <ul>
-            <li><strong>Red</strong> = positive phase</li>
-            <li><strong>Blue</strong> = negative phase</li>
-          </ul>
-          <p>This is extremely important in chemistry because orbital overlap depends on phase. Constructive overlap leads to bonding. Destructive overlap leads to antibonding orbitals.</p>
-
-          <h2>Applications in Chemistry</h2>
-          <p>These concepts explain sigma bonds, pi bonds, hybridization, molecular orbital theory, spectroscopy, and reaction mechanisms.</p>
-          <p><strong>Without orbitals, modern chemistry cannot be understood.</strong></p>
-          
-          <button onClick={() => setCurrentPage('howto')} style={nextButton}>Continue to How To Use</button>
-        </div>
+          <InfoSection title="Positive vs Negative Phase">
+            <div className="info-grid two-column">
+              <article className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div style={{ margin: '20px 0' }}>
+                  <svg width="80" height="80" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="rgba(255, 107, 107, 0.2)" stroke="#ff6b6b" strokeWidth="3"/>
+                    <line x1="30" y1="50" x2="70" y2="50" stroke="#ff6b6b" strokeWidth="4"/>
+                    <line x1="50" y1="30" x2="50" y2="70" stroke="#ff6b6b" strokeWidth="4"/>
+                  </svg>
+                </div>
+                <h3>Positive Phase (+)</h3>
+                <p>Constructive interference regions. Mathematically positive wavefunction amplitude.</p>
+              </article>
+              <article className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div style={{ margin: '20px 0' }}>
+                  <svg width="80" height="80" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="rgba(107, 234, 255, 0.2)" stroke="#6beaff" strokeWidth="3"/>
+                    <line x1="30" y1="50" x2="70" y2="50" stroke="#6beaff" strokeWidth="4"/>
+                  </svg>
+                </div>
+                <h3>Negative Phase (-)</h3>
+                <p>Destructive interference regions. Mathematically negative wavefunction amplitude.</p>
+              </article>
+            </div>
+            <div className="glass-card" style={{ marginTop: '16px' }}>
+              <p>
+                The wavefunction <InlineMath math={'\\psi'} /> conceptually operates like a wave mechanics equation, meaning it holds mathematical signs (+ or -). Since calculating real-world probability requires squaring it (<InlineMath math={'|\\psi|^2'} />), the negative signs technically disappear in pure space-finding probabilities.
+              </p>
+              <p>
+                However, <strong>phase dictates bonding rules</strong>. When you bring two atoms together, their orbital clouds mathematically overlap. 
+                If they overlap with the <strong>same phase (e.g., both positive)</strong>, they constructively interfere, forming a covalent bond. 
+                If they overlap with <strong>opposite phases (+ and -)</strong>, they destructively interfere, actively repelling from one another to create an anti-bonding condition.
+              </p>
+            </div>
+          </InfoSection>
+        </InfoPageLayout>
       )}
 
       {currentPage === 'howto' && (
-        <div style={pageStyle} className="page-style">
-          <h1>How To Use This App</h1>
-          <h2>1. Select Quantum Numbers</h2>
-          <p>
-            Use the sliders on the left panel to pick a valid hydrogenic state. Remember that <InlineMath math={'\\ell<n'} />, and
-            <InlineMath math={'-\\ell\\le m\\le \\ell'} />. You can also adjust the atomic number <InlineMath math={'Z'} /> to see
-            the orbital shrinkage of heavier atomic nuclei like Helium (<InlineMath math={'Z=2'} />) or Carbon (<InlineMath math={'Z=6'} />).
-          </p>
-          
-          <h2>2. Visualization Modes</h2>
-          <ul>
-            <li><strong>Probabilistic Scatter:</strong> Uses a Monte Carlo simulation to randomly place dots proportional to the mathematical probability density. High density means more dots.</li>
-          </ul>
+        <InfoPageLayout
+          eyebrow="Professional Workflow"
+          title="From Parameter Selection To Interpretation"
+          message="Use this page as an execution checklist so every simulation run gives actionable chemistry insight, not just a beautiful picture."
+          heroClassName="hero-howto"
+          onNavigate={setCurrentPage}
+          ctaLabel="Launch Simulator"
+          ctaTarget="simulator"
+        >
+          <InfoSection
+            title="Control-to-Result Table"
+            subtitle="A practical control map for faster classroom demos and more consistent research exploration."
+          >
+            <DataTable
+              columns={["Control", "What It Changes"]}
+              rows={simulatorControlRows.map((row) => [row.control, row.effect])}
+            />
+          </InfoSection>
 
-          <h2>3. Controls</h2>
-          <p>Toggle phase mapping to see positive and negative regions of the wavefunction.</p>
-          <p>The simulator uses a fixed high grid range for stable detail, and you can still enable glow for stronger visual contrast.</p>
-          
-          <h2>4. Changing Views</h2>
-          <p>Use your mouse to interact with the 3D model:</p>
-          <ul>
-            <li><strong>Left-Click & Drag:</strong> Rotate the orbital</li>
-            <li><strong>Right-Click & Drag:</strong> Pan / move the target</li>
-            <li><strong>Scroll:</strong> Zoom in and out</li>
-          </ul>
-          
-          <button onClick={() => setCurrentPage('simulator')} style={{...nextButton, backgroundColor: '#28a745'}}>Launch Simulator 🚀</button>
-        </div>
+          <InfoSection
+            title="Interaction Guide"
+            subtitle="Follow these commands to inspect internal nodes and external symmetries."
+          >
+            <div className="info-grid">
+              <article className="glass-card flex-row-card">
+                <div className="orbital-symbol">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6beaff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 3l7 17 2.8-6.1L20 11 4 3z"></path>
+                    <path d="M13.3 13.9L17 21"></path>
+                  </svg>
+                </div>
+                <div className="orbital-info">
+                  <h3>Left-Click + Drag (Rotate)</h3>
+                  <p><strong>Inspect 3D Geometry.</strong> Freely rotate the visualization sphere to find the optimal viewpoint, exposing hidden angular nodal planes and orbital lobes.</p>
+                </div>
+              </article>
+              
+              <article className="glass-card flex-row-card">
+                <div className="orbital-symbol">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="3" x2="12" y2="21"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <polyline points="12 3 9 6 15 6 12 3"></polyline>
+                    <polyline points="12 21 9 18 15 18 12 21"></polyline>
+                    <polyline points="3 12 6 9 6 15 3 12"></polyline>
+                    <polyline points="21 12 18 9 18 15 21 12"></polyline>
+                  </svg>
+                </div>
+                <div className="orbital-info">
+                  <h3>Right-Click + Drag (Pan)</h3>
+                  <p><strong>Move the Origin.</strong> Shift the entire coordinate system sideways or up and down to center off-axis structures exactly where you need them.</p>
+                </div>
+              </article>
+
+              <article className="glass-card flex-row-card">
+                <div className="orbital-symbol">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#39dcb1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="6"></circle>
+                    <line x1="16" y1="16" x2="21" y2="21"></line>
+                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                  </svg>
+                </div>
+                <div className="orbital-info">
+                  <h3>Mouse Wheel (Zoom)</h3>
+                  <p><strong>Dive Through Shells.</strong> Zoom deep into the nucleus or pull back to see the sprawling outer lobes of high-energy <InlineMath math={'n > 6'} /> states.</p>
+                </div>
+              </article>
+
+              <article className="glass-card flex-row-card">
+                <div className="orbital-symbol">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff8a5b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                    <line x1="4" y1="18" x2="20" y2="18"></line>
+                    <circle cx="9" cy="6" r="2" fill="#ff8a5b"></circle>
+                    <circle cx="15" cy="12" r="2" fill="#ffd265"></circle>
+                    <circle cx="11" cy="18" r="2" fill="#ff8a5b"></circle>
+                  </svg>
+                </div>
+                <div className="orbital-info">
+                  <h3>Z Slider (Nuclear Charge)</h3>
+                  <p><strong>Electrostatic Compression.</strong> Increasing <InlineMath math={'Z'} /> pulls probability density inward, tightening shells and shifting energy behavior in real time.</p>
+                </div>
+              </article>
+            </div>
+          </InfoSection>
+        </InfoPageLayout>
       )}
 
       {currentPage === 'simulator' && (
-        <div className="App">
+        <div className="App simulator-active">
           
           {/* Sidebar Controls */}
       <div className="controls-sidebar">
@@ -823,13 +1390,13 @@ const App = () => {
             )}
           </div>
 
-          <button type="submit" style={{ padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+          <button type="submit" className="sim-apply-btn">
             {loading ? 'Computing...' : 'Apply Changes'}
           </button>
 
           {/* Ad Placeholder for Sidebar */}
-          <div className="google-ad-placeholder" style={{ marginTop: '20px', width: '100%', minHeight: '350px', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #555' }}>
-            <span style={{ color: '#aaa', fontSize: '0.9rem' }}>Google Ad Slot</span>
+          <div className="google-ad-placeholder simulator-ad-slot">
+            <span className="simulator-ad-slot-label">Google Ad Slot</span>
           </div>
 
           <div style={{minHeight: '40px', marginTop: '10px'}}>
@@ -839,10 +1406,10 @@ const App = () => {
       </div>
 
       {/* Main Render Area */}
-      <div className="main-content" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <div className="main-content simulator-main-content">
           <div className="canvas-container" style={{ flex: 1, minHeight: 0 }}>
             <Canvas dpr={canvasDpr} onCreated={({ gl }) => { gl.localClippingEnabled = true; }} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }} performance={{ min: 0.6 }} camera={{ position: [0, 0, gridSize * 1.5], fov: 60 }}>
-                <color attach="background" args={['#111111']} />
+                <color attach="background" args={['#0f1726']} />
                 <ambientLight intensity={0.5} />
                 <pointLight position={[100, 100, 100]} intensity={1} />
                 <pointLight position={[-100, -100, -100]} intensity={0.5} />
@@ -878,68 +1445,60 @@ const App = () => {
             </Canvas>
           </div>
 
-          <div style={{ height: '30px', flexShrink: 0, backgroundColor: '#111', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>
-            <span><strong style={{color:'#ccc'}}>Controls:</strong> Left-Click to Rotate &bull; Right-Click to Pan/Move Target &bull; Scroll to Zoom</span>
+          <div className="simulator-instruction-bar">
+            <span><strong className="simulator-instruction-label">Controls:</strong> Left-Click to Rotate &bull; Right-Click to Pan/Move Target &bull; Scroll to Zoom</span>
           </div>
 
           <div
-            className="resize-handle"
+            className="resize-handle simulator-resize-handle"
             onMouseDown={startResize}
-            style={{
-              height: '8px',
-              backgroundColor: '#444',
-              cursor: 'row-resize',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderTop: '1px solid #222',
-              borderBottom: '1px solid #222',
-              zIndex: 10
-            }}
           >
-            <div style={{ width: '40px', height: '2px', backgroundColor: '#888', borderRadius: '1px' }}></div>
+            <div className="simulator-resize-grip"></div>
           </div>
 
-          <div className="radial-graph-container" style={{ height: `${graphHeight}px`, flexShrink: 0, overflow: 'hidden', backgroundColor: '#1a1a1a', padding: '10px', display: 'flex', flexDirection: 'row' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <h4 style={{ margin: '0 0 10px 0', textAlign: 'center', color: '#ccc', flexShrink: 0 }}>Radial Probability Distribution</h4>
-              <ResponsiveContainer width="100%" height="80%" style={{ flex: 1, minHeight: 0 }}>
-                  <LineChart data={animatedRadialData} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+          <div className="radial-graph-container simulator-graph-panel" style={{ height: `${graphHeight}px` }}>
+            <div className="simulator-graph-main">
+              <h4 className="simulator-graph-title">Radial Probability Distribution</h4>
+              <div className="simulator-graph-chart">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={animatedRadialData} margin={{ top: 5, right: 24, left: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3f526d" />
                   <XAxis
                     dataKey="r"
-                    stroke="#ccc"
-                    tick={{fill: '#ccc'}}
+                    stroke="#d5e5f6"
+                    tick={{ fill: '#d5e5f6' }}
                     tickFormatter={(val) => Number(val).toFixed(1)}
                     tickCount={5}
                     minTickGap={40}
                   />
                   <YAxis
-                    stroke="#ccc"
-                    tick={{fill: '#ccc'}}
+                    stroke="#d5e5f6"
+                    tick={{ fill: '#d5e5f6' }}
                     tickFormatter={(val) => Number(val).toFixed(2)}
                     tickCount={5}
                   />
-                  <Tooltip contentStyle={{ backgroundColor: '#222', border: '1px solid #444', color: '#fff' }} formatter={(val) => Number(val).toFixed(3)} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f1722', border: '1px solid #3d5677', color: '#eaf4ff' }} formatter={(val) => Number(val).toFixed(3)} />
                   <Line
                     type="monotone"
                     dataKey="P"
-                    stroke="#00aaff"
+                    stroke="#57d3ff"
                     dot={false}
-                    strokeWidth={2}
+                    strokeWidth={2.1}
                     isAnimationActive={true}
                     animationDuration={GRAPH_RETRACE_DURATION_MS}
                     animationEasing="ease-in-out"
                   />
                   </LineChart>
-              </ResponsiveContainer>
+                </ResponsiveContainer>
+              </div>
+              <p className="graph-axis-caption">Probability(r)</p>
             </div>
             
             {!showPhase && (
-              <div className="density-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '80px', marginLeft: '10px' }}>
-                <div style={{ fontSize: '0.8rem', color: '#ccc', marginBottom: '10px', flexShrink: 0 }}>Density</div>
-                <div className="density-bar" style={{ display: 'flex', flexDirection: 'row', height: '80%', minHeight: 0 }}>
-                  <div className="density-labels" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: '8px', fontSize: '0.75rem', color: '#aaa' }}>
+              <div className="density-container">
+                <div className="density-title">Density</div>
+                <div className="density-bar">
+                  <div className="density-labels">
                     <span>100</span>
                     <span>80</span>
                     <span>60</span>
@@ -947,7 +1506,7 @@ const App = () => {
                     <span>20</span>
                     <span>0</span>
                   </div>
-                  <div className="density-gradient" style={{ width: '15px', background: 'linear-gradient(to bottom, #ff8c00, #c51b7d, #30005c)', borderRadius: '3px', height: '100%' }}></div>
+                  <div className="density-gradient"></div>
                 </div>
               </div>
             )}
@@ -959,49 +1518,17 @@ const App = () => {
   );
 };
 
-// Simple Styles for Info Pages
-const pageStyle = {
-  padding: '40px',
-  color: '#fff',
-  maxWidth: '800px',
-  margin: '0 auto',
-  fontFamily: 'sans-serif',
-  lineHeight: '1.6'
-};
-
-const mathStyles = {
-  backgroundColor: '#222',
-  border: '1px solid #3a3a3a',
-  padding: '15px',
-  borderRadius: '5px',
-  fontSize: '1.2rem',
-  color: '#eaf6ff',
-  textAlign: 'center',
-  margin: '20px 0',
-  overflowX: 'auto'
-};
-
-const nextButton = {
-  marginTop: '30px',
-  padding: '12px 24px',
-  backgroundColor: '#007bff',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '4px',
-  fontSize: '1rem',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
-
 // Reusable styling for the navigation buttons
 const navButtonStyle = (isActive) => ({
-  background: 'none',
-  border: 'none',
-  color: isActive ? '#00aaff' : '#ccc',
+  background: isActive ? 'linear-gradient(135deg, rgba(48, 198, 255, 0.23), rgba(122, 247, 176, 0.2))' : 'rgba(8, 19, 32, 0.35)',
+  border: isActive ? '1px solid rgba(96, 219, 255, 0.5)' : '1px solid rgba(112, 157, 196, 0.22)',
+  color: isActive ? '#dfffff' : '#d3e6fa',
   fontSize: '1rem',
   cursor: 'pointer',
-  padding: '5px 10px',
-  borderBottom: isActive ? '2px solid #00aaff' : '2px solid transparent'
+  padding: '8px 14px',
+  borderRadius: '999px',
+  transition: 'all 0.2s ease',
+  letterSpacing: '0.01em'
 });
 
 export default App;
