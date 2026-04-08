@@ -31,6 +31,9 @@ MAX_SCATTER_POINTS = 50000000
 SCATTER_RESOLUTION = 120
 SCATTER_DENSITY_SCALE = 1.0
 SCATTER_POINTS_STEP = 5000000
+SCATTER_POINT_STRIDE = 5
+SCATTER_BINARY_SUFFIX = ".f32bin"
+SCATTER_POINT_BYTES = SCATTER_POINT_STRIDE * 4
 CACHE_VERSION = 1
 CACHE_ROOT = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), 'cache', 'orbitals')))
 CACHE_MAX_SIZE_BYTES = int(os.getenv("ORBITAL_CACHE_MAX_BYTES", "8589934592"))
@@ -131,7 +134,11 @@ def _prune_cache():
 
     entries = []
     total_size = 0
-    for file_path in CACHE_ROOT.rglob("*.npz"):
+    for file_path in CACHE_ROOT.rglob("*"):
+        if not file_path.is_file():
+            continue
+        if file_path.suffix not in {".npz", SCATTER_BINARY_SUFFIX}:
+            continue
         try:
             stat = file_path.stat()
         except OSError:
@@ -187,6 +194,52 @@ def _load_npz_cache(path: Path):
         return None
 
 
+def _scatter_binary_cache_path(npz_path: Path) -> Path:
+    return npz_path.with_suffix(SCATTER_BINARY_SUFFIX)
+
+
+def _save_scatter_binary_cache(path: Path, points: np.ndarray):
+    points_f32 = points.astype(np.float32, copy=False)
+    if points_f32.ndim != 2 or points_f32.shape[1] != SCATTER_POINT_STRIDE:
+        return
+    if int(points_f32.nbytes) > CACHE_MAX_ENTRY_BYTES:
+        return
+
+    tmp_path = Path(f"{path}.tmp")
+    with CACHE_LOCK:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with open(tmp_path, "wb") as handle:
+                handle.write(points_f32.tobytes())
+            os.replace(tmp_path, path)
+        finally:
+            _safe_unlink(tmp_path)
+        _prune_cache()
+
+
+def _scatter_binary_cached_response(path: Path):
+    if not path.exists():
+        return None
+
+    try:
+        stat = path.stat()
+        if stat.st_size % SCATTER_POINT_BYTES != 0:
+            _safe_unlink(path)
+            return None
+        point_count = stat.st_size // SCATTER_POINT_BYTES
+        os.utime(path, None)
+        return FileResponse(
+            path,
+            media_type="application/octet-stream",
+            headers={
+                "X-Point-Count": str(point_count),
+                "X-Point-Stride": str(SCATTER_POINT_STRIDE),
+            },
+        )
+    except Exception:
+        return None
+
+
 def _scatter_binary_response(points: np.ndarray) -> Response:
     points_f32 = points.astype(np.float32, copy=False)
     return Response(
@@ -194,7 +247,7 @@ def _scatter_binary_response(points: np.ndarray) -> Response:
         media_type="application/octet-stream",
         headers={
             "X-Point-Count": str(points_f32.shape[0]),
-            "X-Point-Stride": "5",
+            "X-Point-Stride": str(SCATTER_POINT_STRIDE),
         },
     )
 
@@ -237,10 +290,21 @@ def get_scatter(
         "density_scale": density_scale,
     }
     scatter_cache_file = _cache_path("scatter", scatter_cache_params)
+    scatter_binary_cache_file = _scatter_binary_cache_path(scatter_cache_file)
+
+    if binary:
+        cached_binary_response = _scatter_binary_cached_response(scatter_binary_cache_file)
+        if cached_binary_response is not None:
+            return cached_binary_response
+
     cached_scatter = _load_npz_cache(scatter_cache_file)
     if cached_scatter is not None and "points" in cached_scatter:
         cached_points = cached_scatter["points"]
         if binary:
+            _save_scatter_binary_cache(scatter_binary_cache_file, cached_points)
+            cached_binary_response = _scatter_binary_cached_response(scatter_binary_cache_file)
+            if cached_binary_response is not None:
+                return cached_binary_response
             return _scatter_binary_response(cached_points)
         return {"points": cached_points.tolist()}
 
@@ -335,6 +399,10 @@ def get_scatter(
             empty_points = np.empty((0, 5), dtype=np.float32)
             _save_npz_cache(scatter_cache_file, {"points": empty_points})
             if binary:
+                _save_scatter_binary_cache(scatter_binary_cache_file, empty_points)
+                cached_binary_response = _scatter_binary_cached_response(scatter_binary_cache_file)
+                if cached_binary_response is not None:
+                    return cached_binary_response
                 return _scatter_binary_response(empty_points)
             return {"points": []}
 
@@ -346,8 +414,12 @@ def get_scatter(
             points[:, 3] = points[:, 3] / d_max
 
         _save_npz_cache(scatter_cache_file, {"points": points.astype(np.float32, copy=False)})
+        _save_scatter_binary_cache(scatter_binary_cache_file, points)
 
         if binary:
+            cached_binary_response = _scatter_binary_cached_response(scatter_binary_cache_file)
+            if cached_binary_response is not None:
+                return cached_binary_response
             return _scatter_binary_response(points)
 
         return {"points": points.tolist()}
