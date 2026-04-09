@@ -87,6 +87,7 @@ code {
 .App.simulator-active {
   margin-top: 14px;
   height: calc(100vh - 14px);
+  background: #000;
 }
 
 .Resizer {
