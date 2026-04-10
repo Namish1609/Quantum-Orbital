@@ -449,6 +449,10 @@ code {
   width: 100%;
 }
 
+.info-page-main-layout:not(.has-learn-sidebar) {
+  column-gap: clamp(0px, 0.42vw, 10px);
+}
+
 .info-page-main-layout.has-learn-sidebar {
   grid-template-columns: var(--info-rail-width) minmax(0, 1fr) var(--info-rail-width);
 }
@@ -485,7 +489,7 @@ code {
   background-image:
     linear-gradient(160deg, rgba(6, 16, 30, 0.8) 0%, rgba(11, 28, 44, 0.88) 100%),
     url("../public/wp15211542.jpg");
-  background-size: cover, clamp(460px, 36vw, 1120px) auto;
+  background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
   border: none;
@@ -640,6 +644,11 @@ code {
   justify-self: stretch;
   display: grid;
   gap: clamp(20px, 1.5vw, 28px);
+}
+
+.info-page-main-layout:not(.has-learn-sidebar) .page-style {
+  max-width: none;
+  padding-right: clamp(8px, 0.8vw, 20px);
 }
 
 .info-page-main-layout.has-learn-sidebar .page-style {
