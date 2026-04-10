@@ -432,8 +432,52 @@ const quickLinks = [
   { id: 'welcome', label: 'Welcome' },
   { id: 'chemistry', label: 'Chemistry Concepts' },
   { id: 'howto', label: 'How To Use' },
+  { id: 'faqs', label: 'FAQs' },
   { id: 'learn-quantum-theory', label: 'Learn' },
   { id: 'simulator', label: 'Simulator' },
+];
+
+const siteFaqs = [
+  {
+    question: 'Is Quantum Orbital Explorer free to use?',
+    answer: 'Yes. The current version is free for learning, classroom demos, and self-study. If advanced paid plans are introduced later, they will be shown clearly in the app before any billing step.',
+  },
+  {
+    question: 'Do I need to create an account before using the simulator?',
+    answer: 'No account is required for normal simulation use. You can open the site, choose quantum numbers, and run visualizations directly.',
+  },
+  {
+    question: 'What exactly does the simulator calculate?',
+    answer: 'It computes hydrogenic orbital wavefunction-derived probability distributions and renders them as dense 3D scatter clouds, with a radial probability graph for distance-based interpretation.',
+  },
+  {
+    question: 'Which quantum values can I control?',
+    answer: 'You can control principal n, azimuthal l, magnetic m, and nuclear charge Z. These controls change shell size, symmetry, orientation, and contraction behavior.',
+  },
+  {
+    question: 'What do the red and blue regions represent?',
+    answer: 'They represent opposite wavefunction phase signs, not positive/negative electric charge. The phase view helps interpret constructive versus destructive overlap behavior.',
+  },
+  {
+    question: 'What is Slice View used for?',
+    answer: 'Slice View clips the cloud along selected axes so you can inspect interior nodal shells and angular boundaries that are usually hidden by outer density.',
+  },
+  {
+    question: 'Are these visuals physically meaningful or just artistic?',
+    answer: 'They are physically motivated visualizations based on analytical orbital models. They are educationally accurate for hydrogenic intuition, while advanced many-electron systems still require higher-level methods.',
+  },
+  {
+    question: 'Can I use this in a classroom, lecture, or presentation?',
+    answer: 'Yes. The interface is designed for teaching and communication. You can use it for educational demos, module explanations, and concept walkthroughs.',
+  },
+  {
+    question: 'Why can high-n states feel heavy on some devices?',
+    answer: 'Higher n increases point complexity and rendering load. The app applies performance guards, but older hardware may still show slower interaction during very dense scenes.',
+  },
+  {
+    question: 'Does the website store my private simulation content?',
+    answer: 'Simulation parameter requests are used to generate results and improve reliability. The app does not require private profile data to run core visualization features.',
+  },
 ];
 
 const learnTopics = [
@@ -501,6 +545,20 @@ const learnTopics = [
       { title: 'Erwin Schrodinger', description: 'Place an image with notes on wave mechanics.' },
       { title: 'Double-Slit Experiment Diagram', description: 'Insert interference pattern image and interpretation labels.' },
     ],
+    faqs: [
+      {
+        question: 'Why was wave-particle duality needed in the first place?',
+        answer: 'Classical models alone could not explain photoelectric and diffraction experiments. Duality was needed to match both discrete detections and interference patterns.',
+      },
+      {
+        question: 'Does uncertainty come from bad instruments?',
+        answer: 'No. Quantum uncertainty is a fundamental property of conjugate observables and is built into the state description itself.',
+      },
+      {
+        question: 'Which equation should I remember first in this module?',
+        answer: 'Start with E = h nu and lambda = h / p. Together they capture quantized energy and wave-like matter behavior.',
+      },
+    ],
   },
   {
     id: 'learn-quantum-numbers-detail',
@@ -566,6 +624,20 @@ const learnTopics = [
       { title: 'Orbital Orientation Set', description: 'Add image panel for px, py, pz orientation examples.' },
       { title: 'Spectral Splitting Visual', description: 'Insert Zeeman/Stark splitting reference graphic.' },
     ],
+    faqs: [
+      {
+        question: 'Why does m change orientation but not orbital family?',
+        answer: 'Orbital family is set by l. The m value only selects orientation states within that same l family.',
+      },
+      {
+        question: 'Can l ever be bigger than n - 1?',
+        answer: 'No. The allowed values are restricted by boundary conditions, so l must satisfy 0 <= l <= n - 1.',
+      },
+      {
+        question: 'Does changing Z change the allowed quantum numbers?',
+        answer: 'No. Z changes energy and spatial contraction, but the allowed quantum-number structure remains the same.',
+      },
+    ],
   },
   {
     id: 'learn-orbital-geometry',
@@ -626,6 +698,20 @@ const learnTopics = [
       { title: 'Cartesian Orientation Labels', description: 'Place annotated px/py/pz and d-orbital orientation visuals.' },
       { title: 'Crystal Field Splitting Diagram', description: 'Insert octahedral/tetrahedral splitting graphics.' },
     ],
+    faqs: [
+      {
+        question: 'Why do p orbitals have two lobes?',
+        answer: 'A single angular node splits space into two opposite-phase regions, creating the familiar two-lobe geometry.',
+      },
+      {
+        question: 'Are real-orbital drawings and complex orbitals both valid?',
+        answer: 'Yes. Real combinations are often used for chemistry visualization, while complex forms are common in angular-momentum operator work.',
+      },
+      {
+        question: 'Do these orbital shapes represent electron paths?',
+        answer: 'No. They represent probability amplitude structure, not classical trajectories of a particle orbiting like a planet.',
+      },
+    ],
   },
   {
     id: 'learn-nodes-antinodes',
@@ -684,6 +770,20 @@ const learnTopics = [
       { title: 'Nodal Plane Cutaway', description: 'Insert a sliced orbital showing zero-density boundaries.' },
       { title: 'Phase Color Overlay', description: 'Add red/blue lobe map illustrating sign inversion.' },
       { title: 'Bonding vs Antibonding Pair', description: 'Insert two-orbital overlap comparison image.' },
+    ],
+    faqs: [
+      {
+        question: 'Is a node the same as "no electron exists there" forever?',
+        answer: 'A node is where amplitude is exactly zero for that state, so probability there is zero for that stationary state description.',
+      },
+      {
+        question: 'Do opposite phase colors mean opposite electric charge?',
+        answer: 'No. They indicate opposite signs of the wavefunction phase, which matters for interference and overlap behavior.',
+      },
+      {
+        question: 'Can antibonding orbitals still be occupied?',
+        answer: 'Yes. They can be occupied depending on electron configuration, usually reducing net bond order when populated.',
+      },
     ],
   },
   {
@@ -749,6 +849,20 @@ const learnTopics = [
       { title: 'Radial Shell Cross-Section', description: 'Insert shell cutaway with node ring annotations.' },
       { title: 'Angular Node Planes', description: 'Insert p/d/f nodal plane and cone overlays.' },
       { title: 'Combined Node Diagram', description: 'Insert hybrid view showing both radial and angular nodes.' },
+    ],
+    faqs: [
+      {
+        question: 'Is the total node count always n - 1?',
+        answer: 'For hydrogenic orbitals, yes. The total comes from radial nodes plus angular nodes and equals n - 1.',
+      },
+      {
+        question: 'How do I separate radial and angular nodes in the simulator?',
+        answer: 'Use Slice View and camera rotation. Radial nodes appear as shell-like boundaries; angular nodes appear as planes or cones.',
+      },
+      {
+        question: 'Why can a d orbital have zero radial nodes?',
+        answer: 'Because radial node count is n - l - 1. For 3d, that is 3 - 2 - 1 = 0.',
+      },
     ],
   },
   {
@@ -817,6 +931,20 @@ const learnTopics = [
       { title: 'Angular Heatmap', description: 'Add spherical angular probability map image.' },
       { title: 'Cumulative Probability Plot', description: 'Insert cumulative curve with threshold markers.' },
     ],
+    faqs: [
+      {
+        question: 'What is the difference between |psi|^2 and P(r)?',
+        answer: '|psi|^2 is local point density, while P(r) includes the 4pi r^2 geometric factor and describes probability by radius shell.',
+      },
+      {
+        question: 'Why does radial probability often peak away from the nucleus?',
+        answer: 'The r^2 factor expands shell volume with radius, so shell probability can peak away from the center even when local density is high near small r.',
+      },
+      {
+        question: 'Can cumulative probability exceed 1?',
+        answer: 'No. Properly normalized cumulative probability approaches 1 as radius approaches infinity.',
+      },
+    ],
   },
   {
     id: 'learn-solved-examples',
@@ -875,6 +1003,20 @@ const learnTopics = [
       { title: 'Orbital Snapshot Gallery', description: 'Add side-by-side images for solved examples.' },
       { title: 'Instructor Annotation Layer', description: 'Insert marked-up image showing node callouts.' },
     ],
+    faqs: [
+      {
+        question: 'What is the best order for solving a new orbital example?',
+        answer: 'Use this order: compute node counts, predict geometry, then verify with phase and slice tools.',
+      },
+      {
+        question: 'Why should I compare the same state at different Z values?',
+        answer: 'It isolates nuclear-charge effects, making contraction and density redistribution easier to observe and explain.',
+      },
+      {
+        question: 'If my prediction and visualization do not match, what should I check first?',
+        answer: 'First check n, l, m limits and whether phase/slice settings changed your interpretation of internal structure.',
+      },
+    ],
   },
 ];
 
@@ -893,6 +1035,7 @@ const PAGE_ROUTE_MAP = {
   welcome: '#/welcome',
   chemistry: '#/chemistry',
   howto: '#/how-to-use',
+  faqs: '#/faqs',
   'learn-quantum-theory': '#/learn/quantum-theory',
   'learn-quantum-numbers-detail': '#/learn/quantum-numbers-detail',
   'learn-orbital-geometry': '#/learn/orbital-geometry',
@@ -1023,6 +1166,55 @@ const ExpandableFormula = ({ math, className = '' }) => {
         </div>
       )}
     </>
+  );
+};
+
+const FAQAccordion = ({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const answerRef = useRef(null);
+  const [maxHeight, setMaxHeight] = useState(0);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setMaxHeight(0);
+      return;
+    }
+
+    if (answerRef.current) {
+      setMaxHeight(answerRef.current.scrollHeight);
+    }
+  }, [isOpen, answer]);
+
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return undefined;
+
+    const syncHeight = () => {
+      if (answerRef.current) {
+        setMaxHeight(answerRef.current.scrollHeight);
+      }
+    };
+
+    window.addEventListener('resize', syncHeight);
+    return () => window.removeEventListener('resize', syncHeight);
+  }, [isOpen]);
+
+  return (
+    <article className={`faq-item ${isOpen ? 'is-open' : ''}`.trim()}>
+      <button
+        type="button"
+        className="faq-trigger"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+      >
+        <span className="faq-question">{question}</span>
+        <span className={`faq-triangle ${isOpen ? 'is-open' : ''}`.trim()} aria-hidden="true"></span>
+      </button>
+      <div className="faq-answer-wrap" style={{ maxHeight: `${maxHeight}px` }} aria-hidden={!isOpen}>
+        <div className="faq-answer" ref={answerRef}>
+          <p>{answer}</p>
+        </div>
+      </div>
+    </article>
   );
 };
 
@@ -1208,6 +1400,16 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
         <DataTable columns={topic.table.columns} rows={topic.table.rows} compact />
       </InfoSection>
 
+      {Array.isArray(topic.faqs) && topic.faqs.length > 0 && (
+        <InfoSection title="Module FAQs" subtitle="Quick answers for common questions in this module.">
+          <div className="faq-list">
+            {topic.faqs.map((faq) => (
+              <FAQAccordion key={faq.question} question={faq.question} answer={faq.answer} />
+            ))}
+          </div>
+        </InfoSection>
+      )}
+
       <InfoSection title="Image Slots" subtitle="Use these placeholders for portraits, orbital renders, and annotated diagrams.">
         <div className="learn-image-grid">
           {topic.imageSlots.map((slot) => (
@@ -1344,7 +1546,7 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState(() => {
     if (typeof window === 'undefined') return 'welcome';
     return getPageFromHash(window.location.hash) || 'welcome';
-  }); // welcome, chemistry, howto, learn-*, simulator, about, terms, privacy, contact
+  }); // welcome, chemistry, howto, faqs, learn-*, simulator, about, terms, privacy, contact
 
   // Global Quantum Controls
   const [Z, setZ] = useState(1);
@@ -1603,6 +1805,7 @@ const App = () => {
           <button type="button" onClick={() => navigateToPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome</button>
           <button type="button" onClick={() => navigateToPage('chemistry')} style={navButtonStyle(currentPage === 'chemistry')}>Chemistry Concepts</button>
           <button type="button" onClick={() => navigateToPage('howto')} style={navButtonStyle(currentPage === 'howto')}>How To Use</button>
+          <button type="button" onClick={() => navigateToPage('faqs')} style={navButtonStyle(currentPage === 'faqs')}>FAQs</button>
 
           <div className="learn-nav-item">
             <button
@@ -1937,6 +2140,56 @@ const App = () => {
                   <h3>Z Slider (Nuclear Charge)</h3>
                   <p><strong>Electrostatic Compression.</strong> Increasing <InlineMath math={'Z'} /> pulls probability density inward, tightening shells and shifting energy behavior in real time.</p>
                 </div>
+              </article>
+            </div>
+          </InfoSection>
+        </InfoPageLayout>
+      )}
+
+      {currentPage === 'faqs' && (
+        <InfoPageLayout
+          eyebrow="Support and Guidance"
+          title="FAQs"
+          message="Common questions about the website, simulator workflow, accuracy scope, and usage policy."
+          heroClassName="hero-howto"
+          onNavigate={navigateToPage}
+          ctaLabel="Open Simulator"
+          ctaTarget="simulator"
+        >
+          <InfoSection
+            title="Frequently Asked Questions"
+            subtitle="Tap a question to expand the answer."
+          >
+            <div className="faq-list">
+              {siteFaqs.map((faq) => (
+                <FAQAccordion key={faq.question} question={faq.question} answer={faq.answer} />
+              ))}
+            </div>
+          </InfoSection>
+
+          <InfoSection
+            title="Need More Help?"
+            subtitle="Open support channels or continue into guided learning."
+          >
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <h3>Still Have a Question?</h3>
+                <p>
+                  If your case is not covered in the list above, use the contact page and share your exact quantum settings so support can reproduce your result quickly.
+                </p>
+                <button className="hero-cta" type="button" onClick={() => navigateToPage('contact')}>
+                  Go to Contact
+                </button>
+              </article>
+
+              <article className="glass-card">
+                <h3>Build Stronger Fundamentals</h3>
+                <p>
+                  For concept-first clarity, use the Learn modules where each topic includes theory, equations, visuals, and mini FAQs.
+                </p>
+                <button className="hero-cta" type="button" onClick={() => navigateToPage('learn-quantum-theory')}>
+                  Open Learn Modules
+                </button>
               </article>
             </div>
           </InfoSection>

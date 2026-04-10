@@ -748,6 +748,92 @@ code {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.faq-list {
+  display: grid;
+  gap: 12px;
+}
+
+.faq-item {
+  border: 1px solid rgba(109, 168, 220, 0.34);
+  border-radius: 14px;
+  background: rgba(10, 24, 40, 0.72);
+  box-shadow: 0 10px 22px rgba(3, 9, 17, 0.32);
+  overflow: hidden;
+}
+
+.faq-item.is-open {
+  border-color: rgba(129, 220, 255, 0.52);
+  box-shadow: 0 16px 28px rgba(5, 16, 28, 0.42);
+}
+
+.faq-trigger {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #e7f5ff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.faq-trigger:hover,
+.faq-trigger:focus-visible {
+  background: rgba(23, 46, 68, 0.54);
+}
+
+.faq-question {
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #ecf7ff;
+}
+
+.faq-triangle {
+  width: 12px;
+  height: 8px;
+  flex-shrink: 0;
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  background: #86ddff;
+  transform-origin: center;
+  transition: transform 0.28s ease;
+}
+
+.faq-triangle.is-open {
+  transform: rotate(180deg);
+}
+
+.faq-answer-wrap {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.34s ease;
+}
+
+.faq-answer {
+  border-top: 1px solid rgba(109, 168, 220, 0.24);
+  padding: 0 16px;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.24s ease, transform 0.24s ease, padding 0.24s ease;
+}
+
+.faq-item.is-open .faq-answer {
+  opacity: 1;
+  transform: translateY(0);
+  padding: 0 16px 14px;
+}
+
+.faq-answer p {
+  margin: 12px 0 0;
+  color: #cbe2f6;
+  line-height: 1.55;
+}
+
 /* Add futuristic hover effect for cards */
 .glass-card {
   border: 1px solid var(--panel-border);
@@ -1772,6 +1858,18 @@ code {
   .learn-topic-grid,
   .learn-image-grid {
     grid-template-columns: 1fr;
+  }
+
+  .faq-trigger {
+    padding: 13px 14px;
+  }
+
+  .faq-question {
+    font-size: 0.95rem;
+  }
+
+  .faq-item.is-open .faq-answer {
+    padding: 0 14px 13px;
   }
 
   .site-footer {
