@@ -1021,7 +1021,13 @@ const learnTopics = [
 ];
 
 const learnMenuLinks = [
-  ...learnTopics.map((topic) => ({ id: topic.id, label: topic.label, shortLabel: topic.shortLabel })),
+  ...learnTopics.map((topic, index) => ({
+    id: topic.id,
+    moduleNumber: index + 1,
+    label: topic.label,
+    shortLabel: topic.shortLabel,
+    numberedShortLabel: `${index + 1}. ${topic.shortLabel}`,
+  })),
 ];
 
 const infoPageLinks = [
@@ -1337,6 +1343,9 @@ const ContactChips = () => (
 
 const LearnTopicPage = ({ topic, onNavigate }) => {
   const xAxisKey = topic.chartData?.length > 0 ? Object.keys(topic.chartData[0])[0] : 'x';
+  const topicIndex = learnTopics.findIndex((item) => item.id === topic.id);
+  const previousTopic = topicIndex > 0 ? learnMenuLinks[topicIndex - 1] : null;
+  const nextTopic = topicIndex >= 0 && topicIndex < learnMenuLinks.length - 1 ? learnMenuLinks[topicIndex + 1] : null;
 
   return (
     <InfoPageLayout
@@ -1421,6 +1430,29 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
           </div>
         </InfoSection>
       )}
+
+      <InfoSection title="Module Navigation" subtitle="Go to the previous or next learning module.">
+        <div className="learn-module-footer-nav">
+          {previousTopic && (
+            <button type="button" className="learn-module-nav-btn is-prev" onClick={() => onNavigate(previousTopic.id)}>
+              <span className="learn-module-nav-arrow" aria-hidden="true">&larr;</span>
+              <span className="learn-module-nav-copy">
+                <span className="learn-module-nav-kicker">Previous Module</span>
+                <span className="learn-module-nav-title">{previousTopic.numberedShortLabel}</span>
+              </span>
+            </button>
+          )}
+          {nextTopic && (
+            <button type="button" className="learn-module-nav-btn is-next" onClick={() => onNavigate(nextTopic.id)}>
+              <span className="learn-module-nav-copy">
+                <span className="learn-module-nav-kicker">Next Module</span>
+                <span className="learn-module-nav-title">{nextTopic.numberedShortLabel}</span>
+              </span>
+              <span className="learn-module-nav-arrow" aria-hidden="true">&rarr;</span>
+            </button>
+          )}
+        </div>
+      </InfoSection>
     </InfoPageLayout>
   );
 };
@@ -1490,55 +1522,88 @@ const InfoPageLayout = ({
   heroClassName = '',
   showLearnSidebar = false,
   activeLearnId = null,
-}) => (
-  <div className={`info-page-shell ${showLearnSidebar ? 'has-learn-sidebar' : ''}`.trim()}>
-    <div className={`info-page-main-layout ${showLearnSidebar ? 'has-learn-sidebar' : ''}`.trim()}>
-      {showLearnSidebar && (
-        <aside className="learn-sidebar" aria-label="Learn modules">
-          <div className="learn-sidebar-inner">
-            <h4>Learn Modules</h4>
-            <div className="learn-sidebar-links">
-              {learnMenuLinks.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`learn-sidebar-link ${activeLearnId === item.id ? 'is-active' : ''}`.trim()}
-                  onClick={() => onNavigate(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
+}) => {
+  const contentBlocks = React.Children.toArray(children);
+  const insertIndex = Math.ceil(contentBlocks.length / 2);
+  const firstHalfBlocks = contentBlocks.slice(0, insertIndex);
+  const secondHalfBlocks = contentBlocks.slice(insertIndex);
+
+  return (
+    <div className={`info-page-shell ${showLearnSidebar ? 'has-learn-sidebar' : ''}`.trim()}>
+      <div className={`info-page-main-layout ${showLearnSidebar ? 'has-learn-sidebar' : ''}`.trim()}>
+        {showLearnSidebar && (
+          <aside className="learn-sidebar" aria-label="Learn modules">
+            <div className="learn-sidebar-inner">
+              <h4>Learning Modules</h4>
+              <div className="learn-sidebar-links">
+                {learnMenuLinks.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`learn-sidebar-link ${activeLearnId === item.id ? 'is-active' : ''}`.trim()}
+                    onClick={() => onNavigate(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+        )}
+
+        <main className="page-style">
+          {showLearnSidebar && (
+            <>
+              <h4 className="mobile-learn-module-heading">Learning Modules</h4>
+              <nav className="mobile-learn-module-nav" aria-label="Learning modules">
+                {learnMenuLinks.map((item) => (
+                  <button
+                    key={`mobile-${item.id}`}
+                    type="button"
+                    className={`mobile-learn-module-link ${activeLearnId === item.id ? 'is-active' : ''}`.trim()}
+                    onClick={() => onNavigate(item.id)}
+                  >
+                    {item.numberedShortLabel || item.label}
+                  </button>
+                ))}
+              </nav>
+            </>
+          )}
+
+          <header className={`hero-panel ${heroClassName}`.trim()}>
+            <p className="hero-eyebrow">{eyebrow}</p>
+            <h1>{title}</h1>
+            <p className="hero-message">{message}</p>
+            {ctaLabel && ctaTarget && (
+              <button className="hero-cta" onClick={() => onNavigate(ctaTarget)} type="button">
+                {ctaLabel}
+              </button>
+            )}
+          </header>
+
+          {firstHalfBlocks}
+
+          <div className="mobile-inline-ad-slot" aria-label="Advertisement">
+            <div className="mobile-inline-ad-content">
+              <span>Ad Space</span>
             </div>
           </div>
+
+          {secondHalfBlocks}
+        </main>
+
+        {/* Right Fixed Ad Sidebar */}
+        <aside className="ad-sidebar ad-sidebar-right">
+          <div className="ad-content">
+            <span>Ad Space</span>
+          </div>
         </aside>
-      )}
+      </div>
 
-      <main className="page-style">
-        <header className={`hero-panel ${heroClassName}`.trim()}>
-          <p className="hero-eyebrow">{eyebrow}</p>
-          <h1>{title}</h1>
-          <p className="hero-message">{message}</p>
-          {ctaLabel && ctaTarget && (
-            <button className="hero-cta" onClick={() => onNavigate(ctaTarget)} type="button">
-              {ctaLabel}
-            </button>
-          )}
-        </header>
-
-        {children}
-      </main>
-
-      {/* Right Fixed Ad Sidebar */}
-      <aside className="ad-sidebar ad-sidebar-right">
-        <div className="ad-content">
-          <span>Ad Space</span>
-        </div>
-      </aside>
+      <InfoFooter onNavigate={onNavigate} />
     </div>
-
-    <InfoFooter onNavigate={onNavigate} />
-  </div>
-);
+  );
+};
 
 // --- Main App Component ---
 
@@ -1578,12 +1643,16 @@ const App = () => {
 
   // Graph resizing state
   const [graphHeight, setGraphHeight] = useState(220);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [mobileSimulatorPanel, setMobileSimulatorPanel] = useState(null);
   const sliceOffsetLimit = useMemo(() => Math.max(2, gridSize * 0.95), [gridSize]);
   const slicePlaneExtent = useMemo(() => Math.max(10, gridSize * 2.4), [gridSize]);
 
   const navigateToPage = (pageId) => {
     if (!PAGE_ROUTE_MAP[pageId]) return;
 
+    setIsMobileNavOpen(false);
+    setMobileSimulatorPanel(null);
     setCurrentPage(pageId);
 
     if (typeof window !== 'undefined') {
@@ -1593,6 +1662,10 @@ const App = () => {
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const toggleMobileSimulatorPanel = (panelKey) => {
+    setMobileSimulatorPanel((prev) => (prev === panelKey ? null : panelKey));
   };
 
   const updateSliceOffsetForAxis = (axis, value) => {
@@ -1792,6 +1865,26 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setIsMobileNavOpen(false);
+        setMobileSimulatorPanel(null);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (currentPage !== 'simulator') {
+      setMobileSimulatorPanel(null);
+    }
+    setIsMobileNavOpen(false);
+  }, [currentPage]);
+
+  useEffect(() => {
     fetchData();
     // eslint-disable-next-line
   }, []); // Initial load
@@ -1799,9 +1892,20 @@ const App = () => {
   return (
     <>
       {/* Top Navigation Bar */}
-      <div className={`top-nav ${currentPage === 'simulator' ? 'top-nav-simulator' : ''}`}>
+      <div className={`top-nav ${currentPage === 'simulator' ? 'top-nav-simulator' : ''} ${isMobileNavOpen ? 'mobile-nav-open' : ''}`.trim()}>
         <h3>Quantum Orbital Explorer</h3>
-        <div className="top-nav-buttons">
+        <button
+          type="button"
+          className="mobile-nav-toggle"
+          aria-expanded={isMobileNavOpen}
+          aria-controls="top-nav-buttons"
+          aria-label={isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          onClick={() => setIsMobileNavOpen((prev) => !prev)}
+        >
+          {isMobileNavOpen ? 'Close' : 'Menu'}
+        </button>
+
+        <div id="top-nav-buttons" className="top-nav-buttons">
           <button type="button" onClick={() => navigateToPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome</button>
           <button type="button" onClick={() => navigateToPage('chemistry')} style={navButtonStyle(currentPage === 'chemistry')}>Chemistry Concepts</button>
           <button type="button" onClick={() => navigateToPage('howto')} style={navButtonStyle(currentPage === 'howto')}>How To Use</button>
@@ -2336,10 +2440,38 @@ const App = () => {
       )}
 
       {currentPage === 'simulator' && (
-        <div className="App simulator-active">
+        <div className={`App simulator-active ${mobileSimulatorPanel ? `mobile-panel-${mobileSimulatorPanel}` : ''}`.trim()}>
+          <div className="mobile-sim-toolbar" role="toolbar" aria-label="Simulator mobile panels">
+            <button
+              type="button"
+              className={`mobile-sim-toolbar-btn ${mobileSimulatorPanel === 'controls' ? 'is-active' : ''}`.trim()}
+              onClick={() => toggleMobileSimulatorPanel('controls')}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h.1a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.1a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              Settings
+            </button>
+            <button
+              type="button"
+              className={`mobile-sim-toolbar-btn ${mobileSimulatorPanel === 'graph' ? 'is-active' : ''}`.trim()}
+              onClick={() => toggleMobileSimulatorPanel('graph')}
+            >
+              Graph
+            </button>
+          </div>
           
           {/* Sidebar Controls */}
       <div className="controls-sidebar">
+        <button
+          type="button"
+          className="mobile-panel-close mobile-panel-close-left"
+          onClick={() => setMobileSimulatorPanel(null)}
+          aria-label="Hide settings panel"
+        >
+          &lt;
+        </button>
         <h3 style={{marginTop: 0}}>Quantum Simulator</h3>
         
         <form onSubmit={handleUpdate} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
@@ -2470,6 +2602,14 @@ const App = () => {
           </div>
 
           <div className="radial-graph-container simulator-graph-panel" style={{ height: `${graphHeight}px` }}>
+            <button
+              type="button"
+              className="mobile-panel-close mobile-panel-close-down"
+              onClick={() => setMobileSimulatorPanel(null)}
+              aria-label="Hide graph panel"
+            >
+              v
+            </button>
             <div className="simulator-graph-main">
               <h4 className="simulator-graph-title">Radial Probability Distribution</h4>
               <div className="simulator-graph-chart">
