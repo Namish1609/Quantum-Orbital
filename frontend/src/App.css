@@ -2,7 +2,10 @@
 
 :root {
   --nav-height: 72px;
-  --info-rail-width: 188px;
+  --info-rail-width: clamp(170px, 10.5vw, 300px);
+  --info-layout-gap: clamp(0px, 1vw, 20px);
+  --info-page-max-width: clamp(980px, 88vw, 2400px);
+  --info-page-inline-padding: clamp(18px, 2.1vw, 56px);
   --ink-100: #edf6ff;
   --ink-80: #c5def4;
   --ink-60: #9fb8cf;
@@ -437,14 +440,15 @@ code {
 
 .info-page-main-layout {
   display: grid;
-  grid-template-columns: 1fr var(--info-rail-width);
+  grid-template-columns: minmax(0, 1fr) var(--info-rail-width);
+  column-gap: var(--info-layout-gap);
   align-items: start;
   min-height: 100vh;
   width: 100%;
 }
 
 .info-page-main-layout.has-learn-sidebar {
-  grid-template-columns: var(--info-rail-width) 1fr var(--info-rail-width);
+  grid-template-columns: var(--info-rail-width) minmax(0, 1fr) var(--info-rail-width);
 }
 
 .info-page-main-layout .page-style {
@@ -617,17 +621,18 @@ code {
 .page-style {
   position: relative;
   z-index: 1;
-  margin: 0 auto;
+  margin: 0;
   flex: 1 0 auto;
   width: 100%;
-  max-width: 1140px;
-  padding: calc(var(--nav-height) + 26px) 40px 22px;
+  max-width: var(--info-page-max-width);
+  padding: calc(var(--nav-height) + 26px) var(--info-page-inline-padding) 22px;
+  justify-self: stretch;
   display: grid;
-  gap: 24px;
+  gap: clamp(20px, 1.5vw, 28px);
 }
 
 .info-page-main-layout.has-learn-sidebar .page-style {
-  max-width: 1120px;
+  max-width: var(--info-page-max-width);
 }
 
 .hero-panel {
