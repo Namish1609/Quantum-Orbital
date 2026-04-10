@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://quantum-orbital.onrender.com/sitemap.xml

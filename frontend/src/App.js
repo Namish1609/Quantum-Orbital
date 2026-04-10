@@ -428,6 +428,153 @@ const workflowChartData = [
   { step: 'Slice + Compare', confidence: 91 },
 ];
 
+const moduleThreeOrientationData = [
+  { family: 's', orientations: 1, anisotropy: 1 },
+  { family: 'p', orientations: 3, anisotropy: 5 },
+  { family: 'd', orientations: 5, anisotropy: 8 },
+  { family: 'f', orientations: 7, anisotropy: 10 },
+];
+
+const moduleFourWaveInterferenceData = [
+  { point: 'A', amplitude: 0.9, density: 0.81 },
+  { point: 'B', amplitude: 0.45, density: 0.2 },
+  { point: 'C (Node)', amplitude: 0.0, density: 0.0 },
+  { point: 'D', amplitude: -0.45, density: 0.2 },
+  { point: 'E', amplitude: -0.9, density: 0.81 },
+];
+
+const moduleFiveNodeGrowthData = [
+  { shell: 'n=1', total: 0, radial: 0, angularCap: 0 },
+  { shell: 'n=2', total: 1, radial: 1, angularCap: 1 },
+  { shell: 'n=3', total: 2, radial: 2, angularCap: 2 },
+  { shell: 'n=4', total: 3, radial: 3, angularCap: 3 },
+  { shell: 'n=5', total: 4, radial: 4, angularCap: 4 },
+];
+
+const moduleSixCumulativeShellData = [
+  { radiusA0: 0.5, oneS: 0.09, twoS: 0.02, twoP: 0.01 },
+  { radiusA0: 1.0, oneS: 0.32, twoS: 0.08, twoP: 0.03 },
+  { radiusA0: 1.5, oneS: 0.58, twoS: 0.18, twoP: 0.09 },
+  { radiusA0: 2.0, oneS: 0.76, twoS: 0.31, twoP: 0.18 },
+  { radiusA0: 3.0, oneS: 0.93, twoS: 0.57, twoP: 0.41 },
+  { radiusA0: 4.0, oneS: 0.98, twoS: 0.74, twoP: 0.62 },
+  { radiusA0: 5.0, oneS: 0.995, twoS: 0.85, twoP: 0.76 },
+];
+
+const moduleSevenValidationData = [
+  { stage: 'Initial Guess', predicted: 42, verified: 24 },
+  { stage: 'Node Check', predicted: 61, verified: 52 },
+  { stage: 'Shape Check', predicted: 74, verified: 68 },
+  { stage: 'Phase Check', predicted: 86, verified: 82 },
+  { stage: 'Final Interpretation', predicted: 94, verified: 93 },
+];
+
+const PLANCK_CONSTANT = 6.62607015e-34;
+const REDUCED_PLANCK = 1.054571817e-34;
+const BOLTZMANN_CONSTANT = 1.380649e-23;
+const LIGHT_SPEED = 2.99792458e8;
+const ELEMENTARY_CHARGE = 1.602176634e-19;
+const ELECTRON_MASS = 9.1093837015e-31;
+const PLANCK_EV_SECONDS = 4.135667696e-15;
+const PHOTOELECTRIC_WORK_FUNCTION_EV = 2.3;
+
+const planckSpectralRadiance = (wavelengthMeters, temperatureKelvin) => {
+  const exponent = (PLANCK_CONSTANT * LIGHT_SPEED) / (wavelengthMeters * BOLTZMANN_CONSTANT * temperatureKelvin);
+  const numerator = 2 * PLANCK_CONSTANT * LIGHT_SPEED * LIGHT_SPEED;
+  const denominator = Math.pow(wavelengthMeters, 5) * (Math.exp(exponent) - 1);
+  return numerator / denominator;
+};
+
+const rayleighJeansSpectralRadiance = (wavelengthMeters, temperatureKelvin) => {
+  const numerator = 2 * LIGHT_SPEED * BOLTZMANN_CONSTANT * temperatureKelvin;
+  const denominator = Math.pow(wavelengthMeters, 4);
+  return numerator / denominator;
+};
+
+const moduleOneBlackbodyRaw = Array.from({ length: 23 }, (_, index) => 300 + index * 120).map((wavelengthNm) => {
+  const wavelengthMeters = wavelengthNm * 1e-9;
+  return {
+    wavelengthNm,
+    planck3500: planckSpectralRadiance(wavelengthMeters, 3500),
+    planck5000: planckSpectralRadiance(wavelengthMeters, 5000),
+    planck6500: planckSpectralRadiance(wavelengthMeters, 6500),
+    rayleigh6500: rayleighJeansSpectralRadiance(wavelengthMeters, 6500),
+  };
+});
+
+const moduleOneBlackbodyReference = Math.max(...moduleOneBlackbodyRaw.map((point) => point.planck6500));
+
+const moduleOneBlackbodyData = moduleOneBlackbodyRaw.map((point) => ({
+  wavelengthNm: point.wavelengthNm,
+  planck3500: Number((point.planck3500 / moduleOneBlackbodyReference).toFixed(4)),
+  planck5000: Number((point.planck5000 / moduleOneBlackbodyReference).toFixed(4)),
+  planck6500: Number((point.planck6500 / moduleOneBlackbodyReference).toFixed(4)),
+  rayleigh6500: Number((point.rayleigh6500 / moduleOneBlackbodyReference).toFixed(4)),
+}));
+
+const moduleOnePhotoelectricData = [0.35, 0.45, 0.55, 0.65, 0.8, 1.0, 1.2].map((frequencyPHz) => {
+  const frequencyHz = frequencyPHz * 1e15;
+  const photonEnergyEV = PLANCK_EV_SECONDS * frequencyHz;
+  const kineticEnergyEV = Math.max(0, photonEnergyEV - PHOTOELECTRIC_WORK_FUNCTION_EV);
+  return {
+    frequencyPHz: Number(frequencyPHz.toFixed(2)),
+    photonEnergyEV: Number(photonEnergyEV.toFixed(3)),
+    kineticEnergyEV: Number(kineticEnergyEV.toFixed(3)),
+  };
+});
+
+const moduleOneDeBroglieData = [0.5, 1, 2, 5, 10, 20, 50, 100].map((kineticEV) => {
+  const kineticJoules = kineticEV * ELEMENTARY_CHARGE;
+  const momentum = Math.sqrt(2 * ELECTRON_MASS * kineticJoules);
+  const wavelengthPm = (PLANCK_CONSTANT / momentum) * 1e12;
+  return {
+    kineticEV,
+    wavelengthPm: Number(wavelengthPm.toFixed(2)),
+  };
+});
+
+const moduleOneUncertaintyData = [20, 30, 50, 80, 120, 180].map((deltaXPm) => {
+  const deltaXMeters = deltaXPm * 1e-12;
+  const minDeltaP = REDUCED_PLANCK / (2 * deltaXMeters);
+  return {
+    deltaXPm,
+    minDeltaPScaled: Number((minDeltaP * 1e24).toFixed(3)),
+  };
+});
+
+const moduleOneRadialDistributionData = Array.from({ length: 49 }, (_, index) => Number((index * 0.25).toFixed(2))).map((radiusA0) => {
+  const oneS = 4 * radiusA0 * radiusA0 * Math.exp(-2 * radiusA0);
+  const twoS = 0.125 * radiusA0 * radiusA0 * Math.pow(2 - radiusA0, 2) * Math.exp(-radiusA0);
+  const twoP = (1 / 24) * Math.pow(radiusA0, 4) * Math.exp(-radiusA0);
+  return {
+    radiusA0,
+    oneS: Number(oneS.toFixed(4)),
+    twoS: Number(twoS.toFixed(4)),
+    twoP: Number(twoP.toFixed(4)),
+  };
+});
+
+const moduleTwoRadialNodeRaw = Array.from({ length: 81 }, (_, index) => Number((index * 0.2).toFixed(2))).map((radiusA0) => {
+  const oneS = 4 * radiusA0 * radiusA0 * Math.exp(-2 * radiusA0);
+  const twoS = radiusA0 * radiusA0 * Math.pow(2 - radiusA0, 2) * Math.exp(-radiusA0);
+  const threeS = radiusA0 * radiusA0 * Math.pow(27 - 18 * radiusA0 + 2 * radiusA0 * radiusA0, 2) * Math.exp((-2 * radiusA0) / 3);
+  return {
+    radiusA0,
+    oneS,
+    twoS,
+    threeS,
+  };
+});
+
+const moduleTwoNodeReference = Math.max(...moduleTwoRadialNodeRaw.map((point) => Math.max(point.oneS, point.twoS, point.threeS)));
+
+const moduleTwoRadialNodeData = moduleTwoRadialNodeRaw.map((point) => ({
+  radiusA0: point.radiusA0,
+  oneS: Number((point.oneS / moduleTwoNodeReference).toFixed(4)),
+  twoS: Number((point.twoS / moduleTwoNodeReference).toFixed(4)),
+  threeS: Number((point.threeS / moduleTwoNodeReference).toFixed(4)),
+}));
+
 const quickLinks = [
   { id: 'welcome', label: 'Welcome' },
   { id: 'chemistry', label: 'Chemistry Concepts' },
@@ -484,10 +631,10 @@ const learnTopics = [
   {
     id: 'learn-quantum-theory',
     label: '1. Quantum Theory, Evolution, and Dual Nature',
-    shortLabel: 'Quantum Theory Foundations',
+    shortLabel: 'Quantum Foundations',
     eyebrow: 'Learn Module 1',
-    title: 'What Is Quantum Theory? Evolution and Dual Nature',
-    message: 'Follow the transition from classical certainty to quantum probability through experiments, equations, and interpretation frameworks.',
+    title: 'Core Theory: Quantum Foundations for Orbital Visualization',
+    message: 'The ideas that shape what you see inside the simulator.',
     theoryCards: [
       {
         title: 'Historical Evolution',
@@ -562,11 +709,11 @@ const learnTopics = [
   },
   {
     id: 'learn-quantum-numbers-detail',
-    label: '2. Quantum Numbers in Super Detail',
-    shortLabel: 'Quantum Numbers Deep Dive',
+    label: '2. Quantum Numbers, Eigenstates, and Spherical Harmonics',
+    shortLabel: 'Quantum Numbers',
     eyebrow: 'Learn Module 2',
-    title: 'Explaining Quantum Numbers in Super Detail',
-    message: 'Map each quantum number to measurable consequences in shell size, symmetry, degeneracy, and chemistry.',
+    title: 'Quantum Numbers, Eigenstates, Angular Momentum, and Spherical Harmonics in Full Detail',
+    message: 'The complete mathematical framework behind atomic orbital states.',
     theoryCards: [
       {
         title: 'Principal Quantum Number (n)',
@@ -626,16 +773,16 @@ const learnTopics = [
     ],
     faqs: [
       {
-        question: 'Why does m change orientation but not orbital family?',
-        answer: 'Orbital family is set by l. The m value only selects orientation states within that same l family.',
+        question: 'Why do quantum numbers emerge from mathematics instead of memorization rules?',
+        answer: 'Each quantum number is a separation constant or operator eigenvalue forced by boundary conditions and symmetry in the hydrogenic Schrodinger problem.',
       },
       {
-        question: 'Can l ever be bigger than n - 1?',
-        answer: 'No. The allowed values are restricted by boundary conditions, so l must satisfy 0 <= l <= n - 1.',
+        question: 'How do spherical harmonics translate into the orbital shapes we see?',
+        answer: 'The angular factor Y_l^m controls lobe count, nodal planes or cones, and orientation; the simulator shows these angular signatures in 3D density and phase views.',
       },
       {
-        question: 'Does changing Z change the allowed quantum numbers?',
-        answer: 'No. Z changes energy and spatial contraction, but the allowed quantum-number structure remains the same.',
+        question: 'How are nodes counted for a specific orbital such as 3p?',
+        answer: 'Use N_total = n - 1, N_angular = l, and N_radial = n - l - 1. For 3p, total nodes are 2, with one angular and one radial node.',
       },
     ],
   },
@@ -644,36 +791,129 @@ const learnTopics = [
     label: '3. Geometry of Orbitals in Detail',
     shortLabel: 'Orbital Geometry',
     eyebrow: 'Learn Module 3',
-    title: 'Geometry of Orbitals in Detail',
-    message: 'Understand how spherical harmonics generate directional lobes, nodal planes, and family-specific 3D geometry.',
+    title: 'Orbital Geometry: Symmetry, Orientation, and Bonding Directionality',
+    message: 'A long-form geometric treatment of orbital families, degeneracy, orientation states, and directional overlap.',
     theoryCards: [
       {
-        title: 'Symmetry Families',
-        text: 's orbitals preserve full rotational symmetry, while p, d, and f families break symmetry into directional lobes. Angular nodal structures partition space into alternating phase regions.',
+        title: 'Symmetry Classes and Families',
+        text: 's orbitals are isotropic and preserve full rotational symmetry, while p, d, and f states are anisotropic. Each increase in l adds angular structure and creates richer directional chemistry behavior.',
       },
       {
-        title: 'Orientation and Degeneracy',
-        text: 'For each l value, multiple m states correspond to differently oriented but energetically degenerate solutions in isotropic Coulomb fields. Distortions and fields lift this degeneracy.',
+        title: 'Orientation Manifold from m',
+        text: 'For fixed n and l, the magnetic quantum number m produces 2l+1 orientation states. In the pure Coulomb field these are degenerate, but external fields or ligand environments split and reorder them.',
       },
       {
-        title: 'Real vs Complex Orbitals',
-        text: 'Chemistry often uses real combinations of spherical harmonics to visualize lobes aligned with Cartesian axes. Physics workflows may retain complex forms for angular momentum operators.',
+        title: 'Real and Complex Orbital Bases',
+        text: 'Chemistry uses real linear combinations to align orbital lobes with Cartesian directions, while quantum operator algebra often keeps complex Y_l^m forms. Both are mathematically equivalent basis choices.',
       },
       {
-        title: 'Geometry to Bonding',
-        text: 'Orbital geometry predicts overlap direction and bond strength. Sigma overlap is head-on, while pi overlap is lateral and strongly sensitive to lobe orientation and phase.',
+        title: 'Geometry Controls Overlap Integrals',
+        text: 'Sigma overlap is strongest along internuclear axes, while pi overlap depends on side-on alignment and phase continuity. Geometry therefore predicts bond direction, strength trends, and orbital mixing pathways.',
+      },
+      {
+        title: 'Nodal Topology',
+        text: 'Angular nodes are not decorative boundaries. They are exact zero-amplitude surfaces that divide phase regions and determine where constructive overlap can or cannot occur.',
+      },
+      {
+        title: 'Degeneracy in Field-Free Atoms',
+        text: 'The hydrogenic Hamiltonian is spherically symmetric, so all m states at fixed n and l share energy. This degeneracy encodes symmetry and is lifted by perturbations such as Zeeman or crystal fields.',
+      },
+      {
+        title: 'Chemical Consequences of Shape',
+        text: 'Directional reactivity, ligand preference, and magnetic anisotropy all inherit geometry from the orbital angular factor. Orbital shape is therefore a predictive variable, not a passive visualization artifact.',
+      },
+      {
+        title: 'Simulator Interpretation',
+        text: 'Use density view to identify occupied spatial zones, phase view to detect sign boundaries, and slice mode to inspect interior nodal surfaces that are hidden in surface-level rendering.',
+      },
+    ],
+    deepDiveSections: [
+      {
+        title: 'Separation Framework',
+        text: 'Orbital geometry is encoded in the angular factor after separating the Schrodinger equation in spherical coordinates. This guarantees that l and m are geometric quantum numbers, not empirical labels.',
+        equation: '\\psi_{n,l,m}(r,\\theta,\\phi)=R_{n,l}(r)Y_{l,m}(\\theta,\\phi)',
+      },
+      {
+        title: 'Associated Legendre Structure',
+        text: 'The theta dependence uses associated Legendre functions. Their zeros generate nodal planes or nodal cones, producing the recognizable lobe architectures of p, d, and f states.',
+        equation: 'Y_{l,m}(\\theta,\\phi)=N_{l,m}P_l^m(\\cos\\theta)e^{im\\phi}',
+      },
+      {
+        title: 'Orientation Count',
+        text: 'Each l value has a finite orientation set. Higher l gives more orientation channels and therefore richer anisotropy in external fields and bonding environments.',
+        equation: 'N_{\\text{orientations}}=2l+1',
+      },
+      {
+        title: 'Real Orbital Construction',
+        text: 'Cartesian-labeled orbitals are real combinations of complex m states. This change of basis preserves physics but makes directional interpretation easier for chemistry problems.',
+        equation: 'p_x\\propto\\frac{1}{\\sqrt{2}}\\left(Y_1^{-1}-Y_1^{1}\\right)',
+      },
+      {
+        title: 'Angular Node Budget',
+        text: 'Angular node count equals l, so shape complexity climbs in a controlled and quantized sequence from s to f families.',
+        equation: 'N_{\\text{angular}}=l',
+      },
+      {
+        title: 'Overlap Integral Logic',
+        text: 'Constructive overlap requires same-sign amplitude in shared space. Opposite signs cancel overlap and reduce bonding gain.',
+        equation: 'S=\\int \\psi_A^*(\\mathbf{r})\\psi_B(\\mathbf{r})\\,d\\tau',
+      },
+      {
+        title: 'Crystal Field Distortion',
+        text: 'When spherical symmetry breaks in ligand fields, d-state degeneracy splits into energy subsets. Geometry directly controls splitting magnitude and occupancy order.',
+        equation: '\\Delta_{CF}=E_{\\text{upper}}-E_{\\text{lower}}',
+      },
+      {
+        title: 'Visualization Strategy',
+        text: 'Do not identify family from one camera angle. Rotate to verify lobe multiplicity, then use phase coloring to track sign domains and nodal boundaries.',
+      },
+      {
+        title: 'Geometry to Spectroscopy',
+        text: 'Angular selection rules and dipole matrix elements depend on geometry. Spectral intensity patterns are therefore geometric fingerprints of orbital states.',
+        equation: '\\Delta l=\\pm1',
+      },
+      {
+        title: 'Geometry to Reactivity',
+        text: 'In molecular systems, frontier orbital geometry predicts where electron donation and back-donation are strongest. Directionality governs reaction pathways and activation barriers.',
+      },
+    ],
+    supplementarySections: [
+      {
+        title: 'Orthogonality of Angular States',
+        text: 'Different angular basis states are orthogonal over solid angle, which guarantees clean state separation and prevents double counting of orientation information.',
+        equation: '\\int Y_{l,m}^*(\\theta,\\phi)Y_{l^{\\prime},m^{\\prime}}(\\theta,\\phi)\\,d\\Omega=\\delta_{l,l^{\\prime}}\\delta_{m,m^{\\prime}}',
+      },
+      {
+        title: 'Parity Signature of Orbital Families',
+        text: 'Each l family has a definite parity. This symmetry controls selection-rule behavior and explains why inversion properties matter in spectroscopy and bonding models.',
+        equation: 'Y_{l,m}(\\pi-\\theta,\\phi+\\pi)=(-1)^lY_{l,m}(\\theta,\\phi)',
+      },
+      {
+        title: 'Ladder-Operator Connectivity',
+        text: 'm states inside one l manifold are connected algebraically through angular momentum ladder operators, revealing orientation structure as an operator-generated sequence.',
+        equation: '\\hat{L}_{\\pm}Y_l^m=\\hbar\\sqrt{l(l+1)-m(m\\pm1)}\\,Y_l^{m\\pm1}',
       },
     ],
     equations: [
       {
         title: 'Wavefunction Separation',
         math: '\\psi_{n,l,m}(r,\\theta,\\phi)=R_{n,l}(r)Y_{l,m}(\\theta,\\phi)',
-        description: 'All orbital geometry is encoded in angular and radial factors multiplied together.',
+        description: 'Orbital geometry and radial extent are factored into independent mathematical parts.',
       },
       {
         title: 'Spherical Harmonic Core Form',
         math: 'Y_{l,m}(\\theta,\\phi)=N_{l,m}P_l^m(\\cos\\theta)e^{im\\phi}',
-        description: 'Associated Legendre structure defines nodal planes/cones and azimuthal behavior.',
+        description: 'Associated Legendre functions and azimuthal phase terms set lobe topology and orientation behavior.',
+      },
+      {
+        title: 'Orientation Multiplicity',
+        math: 'g_l = 2l + 1',
+        description: 'Counts how many m-resolved orientations exist for a chosen l family.',
+      },
+      {
+        title: 'Orbital Overlap Integral',
+        math: 'S=\\int \\psi_A^*(\\mathbf{r})\\psi_B(\\mathbf{r})\\,d\\tau',
+        description: 'Provides a formal directional measure of bonding compatibility between two orbitals.',
       },
     ],
     chartTitle: 'Shape Complexity vs Orbital Family',
@@ -684,6 +924,17 @@ const learnTopics = [
       { dataKey: 'directionality', name: 'Directionality Index', color: '#ff8a5b' },
       { dataKey: 'chemistry', name: 'Chemistry Relevance', color: '#ffd265' },
     ],
+    secondaryCharts: [
+      {
+        title: 'Orientation Multiplicity and Anisotropy',
+        subtitle: 'Growth of m-state count and directional anisotropy from s to f families.',
+        data: moduleThreeOrientationData,
+        lines: [
+          { dataKey: 'orientations', name: 'Orientation Count', color: '#63d6ff' },
+          { dataKey: 'anisotropy', name: 'Anisotropy Index', color: '#ff9f6e' },
+        ],
+      },
+    ],
     table: {
       columns: ['Family', 'l Value', 'Typical Node Character', 'Chemistry Implication'],
       rows: [
@@ -691,12 +942,31 @@ const learnTopics = [
         ['p', '1', 'Single nodal plane', 'Directional sigma and pi bonding'],
         ['d', '2', 'Two angular nodes', 'Transition-metal field splitting'],
         ['f', '3', 'Three angular nodes', 'Strong anisotropy and complex magnetism'],
+        ['g', '4', 'Four angular nodes', 'Advanced high-l modeling and shape control'],
       ],
     },
     imageSlots: [
-      { title: 's, p, d, f Shape Atlas', description: 'Insert multi-panel orbital geometry image.' },
-      { title: 'Cartesian Orientation Labels', description: 'Place annotated px/py/pz and d-orbital orientation visuals.' },
-      { title: 'Crystal Field Splitting Diagram', description: 'Insert octahedral/tetrahedral splitting graphics.' },
+      {
+        title: 'Spherical Harmonics Atlas',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/6/62/Spherical_Harmonics.png',
+        alt: 'Table of spherical harmonics showing angular patterns',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Angular basis functions that generate orbital lobe topology and node geometry.',
+      },
+      {
+        title: 'Hydrogenic Orbital Family Grid',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Atomic_orbitals_n1234_m-eigenstates.png',
+        alt: 'Hydrogenic s p d f orbital family comparison',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Direct visual comparison of n, l, and m-resolved orbital states.',
+      },
+      {
+        title: 'Real Spherical Harmonics 2D Table',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/3/36/Real_Spherical_Harmonics_Figure_Table_Complex_2D.png',
+        alt: 'Real spherical harmonics figure table',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Real-basis harmonic forms used for axis-aligned orbital interpretation in chemistry.',
+      },
     ],
     faqs: [
       {
@@ -718,24 +988,105 @@ const learnTopics = [
     label: '4. Nodes and Antinodes',
     shortLabel: 'Nodes and Antinodes',
     eyebrow: 'Learn Module 4',
-    title: 'Explaining Nodes and Antinodes',
-    message: 'Translate interference mathematics into orbital zero-surfaces (nodes) and high-amplitude regions (antinodes).',
+    title: 'Nodes and Antinodes: Interference Topology in Atomic Orbitals',
+    message: 'A full explanation of how destructive and constructive interference create node surfaces, phase domains, and bonding consequences.',
     theoryCards: [
       {
-        title: 'Node Definition',
-        text: 'A node is a locus where the wavefunction amplitude is exactly zero. It appears as a surface in 3D orbitals and separates regions of opposite phase.',
+        title: 'Node as an Exact Zero Condition',
+        text: 'A node is the set of points where wavefunction amplitude is identically zero. It is a strict eigenfunction property and not a low-density approximation.',
       },
       {
-        title: 'Antinode Definition',
-        text: 'Antinodes are regions of high amplitude magnitude and therefore high probability density after squaring. Orbital lobes correspond to antinode-rich regions.',
+        title: 'Antinode as Maximum Amplitude Zone',
+        text: 'Antinodes are regions where amplitude magnitude is large, so probability density is high after squaring. Orbital lobes are antinode-dominant volumes.',
       },
       {
-        title: 'Interference Logic',
-        text: 'When amplitudes overlap with opposite sign, destructive interference creates nodal boundaries. Matching sign creates constructive reinforcement and antinode growth.',
+        title: 'Interference and Sign Structure',
+        text: 'Opposite-sign amplitude overlap drives destructive cancellation and node creation. Same-sign overlap reinforces density and expands antinode zones.',
       },
       {
-        title: 'Practical Interpretation',
-        text: 'In chemistry, nodal surfaces reduce overlap and can weaken bonding channels, while antinode alignment increases electron sharing in bonding orbitals.',
+        title: 'Bonding Interpretation',
+        text: 'Nodal surfaces suppress overlap pathways and often correlate with antibonding character, while antinode alignment supports constructive overlap and bond stabilization.',
+      },
+      {
+        title: 'Phase Color Is Not Charge',
+        text: 'Red and blue lobes represent opposite signs of wavefunction phase, not positive and negative electric charge. This sign is essential for overlap calculations.',
+      },
+      {
+        title: 'Node Geometry in 3D',
+        text: 'Nodes appear as planes, cones, or shells depending on whether the zero comes from angular or radial factors. Their dimensionality is a geometric fingerprint of the state.',
+      },
+      {
+        title: 'Experimental Consequences',
+        text: 'Interference topology influences transition strengths, orbital mixing patterns, and spectroscopic signal intensities in real atomic and molecular systems.',
+      },
+      {
+        title: 'Simulator Reading Workflow',
+        text: 'Find sign domains in phase mode, then cut with slice mode to expose hidden nodes. Only after that interpret bonding or antibonding tendencies.',
+      },
+    ],
+    deepDiveSections: [
+      {
+        title: 'Standing-Wave Origin',
+        text: 'Nodes are expected whenever boundary conditions force standing-wave solutions. Quantum nodes are the 3D analog of fixed points in string standing waves.',
+        equation: '\\psi(x)=A\\sin(kx)',
+      },
+      {
+        title: 'Node Condition',
+        text: 'Node positions occur where the total amplitude vanishes. The condition is exact and can be solved analytically for hydrogenic states.',
+        equation: '\\psi(r,\\theta,\\phi)=0',
+      },
+      {
+        title: 'Density Interpretation',
+        text: 'Probability density is phase-insensitive after squaring, so node surfaces remain zero while opposite-sign antinodes can have the same density magnitude.',
+        equation: '\\rho=|\\psi|^2',
+      },
+      {
+        title: 'Constructive and Destructive Branches',
+        text: 'Superposed states produce branch-dependent outcomes: addition increases amplitude where phases align, subtraction can cancel amplitude where they oppose.',
+        equation: '\\psi_{\\text{tot}}=\\psi_A\\pm\\psi_B',
+      },
+      {
+        title: 'Nodal Surfaces and Chemistry',
+        text: 'When nodal surfaces lie between atomic centers, overlap integrals fall and antibonding character rises. This directly affects molecular stability trends.',
+      },
+      {
+        title: 'Angular-Node Planes',
+        text: 'For p states, one angular node appears as a plane. For d and f states, multiple angular node surfaces partition space into alternating sign domains.',
+        equation: 'N_{\\text{angular}}=l',
+      },
+      {
+        title: 'Radial-Node Shells',
+        text: 'Radial zeros produce spherical node shells that separate inner and outer antinode zones. These shells are critical in ns and np radial interpretation.',
+        equation: 'N_{\\text{radial}}=n-l-1',
+      },
+      {
+        title: 'Orbital Mixing Constraint',
+        text: 'Only orbitals with compatible symmetry and phase arrangement mix efficiently. Node mismatch suppresses mixing channels and affects reactivity pathways.',
+      },
+      {
+        title: 'Visual Parsing Rule',
+        text: 'Never infer nodes from color alone. Confirm with slice planes and rotational checks so hidden boundaries are not mistaken for low-density tails.',
+      },
+      {
+        title: 'From Geometry to Spectra',
+        text: 'Selection-rule allowed transitions depend on overlap of initial and final states. Node architecture controls matrix-element magnitude and transition intensity.',
+      },
+    ],
+    supplementarySections: [
+      {
+        title: 'Phase Inversion Across Nodes',
+        text: 'Crossing a true node flips wavefunction sign. The associated phase jump is the reason opposite-color lobes are separated by zero-amplitude boundaries.',
+        equation: '\\Delta\\phi=\\pi',
+      },
+      {
+        title: 'Interference Intensity Rule',
+        text: 'Observed constructive or destructive behavior depends on squared total amplitude, not on amplitudes viewed in isolation.',
+        equation: 'I\\propto|\\psi_A+\\psi_B|^2',
+      },
+      {
+        title: 'Dipole-Moment Cancellation by Symmetry',
+        text: 'Nodal symmetry can suppress transition strength when positive and negative contributions cancel in the dipole integral.',
+        equation: '\\mu_{if}=\\int \\psi_f^*(\\mathbf{r})\\,\\mathbf{r}\\,\\psi_i(\\mathbf{r})\\,d\\tau',
       },
     ],
     equations: [
@@ -749,6 +1100,16 @@ const learnTopics = [
         math: '\\rho(r,\\theta,\\phi)=|\\psi(r,\\theta,\\phi)|^2',
         description: 'Antinodes become high-density volumes in probability maps.',
       },
+      {
+        title: 'Superposition Interference',
+        math: '\\psi_{\\text{total}}=\\psi_A+\\psi_B',
+        description: 'Relative sign of component amplitudes determines whether overlap reinforces or cancels.',
+      },
+      {
+        title: 'Bonding-Antibonding Pair',
+        math: '\\psi_{\\pm}=\\frac{1}{\\sqrt{2}}\\left(\\psi_A\\pm\\psi_B\\right)',
+        description: 'Plus gives bonding tendency; minus introduces central node and antibonding character.',
+      },
     ],
     chartTitle: 'Interference Balance',
     chartSubtitle: 'A conceptual chart showing where constructive and destructive regimes dominate.',
@@ -756,6 +1117,17 @@ const learnTopics = [
     chartLines: [
       { dataKey: 'positive', name: 'Constructive Regime', color: '#ff6b6b' },
       { dataKey: 'negative', name: 'Destructive Regime', color: '#6beaff' },
+    ],
+    secondaryCharts: [
+      {
+        title: 'Amplitude-to-Density Mapping',
+        subtitle: 'How signed amplitude converts into non-negative probability density across a node crossing.',
+        data: moduleFourWaveInterferenceData,
+        lines: [
+          { dataKey: 'amplitude', name: 'Amplitude', color: '#8ed7ff' },
+          { dataKey: 'density', name: 'Density', color: '#ffd265' },
+        ],
+      },
     ],
     table: {
       columns: ['Region Type', 'Wavefunction Sign Behavior', 'Density Signature', 'Chemical Consequence'],
@@ -767,9 +1139,27 @@ const learnTopics = [
       ],
     },
     imageSlots: [
-      { title: 'Nodal Plane Cutaway', description: 'Insert a sliced orbital showing zero-density boundaries.' },
-      { title: 'Phase Color Overlay', description: 'Add red/blue lobe map illustrating sign inversion.' },
-      { title: 'Bonding vs Antibonding Pair', description: 'Insert two-orbital overlap comparison image.' },
+      {
+        title: 'Hydrogen Density Plot Grid',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Hydrogen_Density_Plots.png',
+        alt: 'Hydrogen orbital density plot panel',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Node and antinode regions across multiple hydrogenic states.',
+      },
+      {
+        title: 'Molecular Orbital Diagram (H2)',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Dihydrogen-MO-Diagram.svg',
+        alt: 'Dihydrogen molecular orbital diagram',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Bonding and antibonding construction from two atomic basis orbitals.',
+      },
+      {
+        title: 'He2 Orbital Energy Diagram',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/b/bc/Molecular_orbital_diagram_of_He2.png',
+        alt: 'Molecular orbital diagram of helium dimer',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Illustrates node-driven antibonding occupancy effects in a weakly bound system.',
+      },
     ],
     faqs: [
       {
@@ -789,26 +1179,105 @@ const learnTopics = [
   {
     id: 'learn-radial-angular-nodes',
     label: '5. Radial and Angular Nodes',
-    shortLabel: 'Radial and Angular Nodes',
+    shortLabel: 'Radial vs Angular',
     eyebrow: 'Learn Module 5',
     title: 'Radial and Angular Nodes: Full Breakdown',
-    message: 'Separate where nodal shells come from radial terms and where nodal planes/cones come from angular terms.',
+    message: 'A complete node-partition framework: where radial zeros come from, where angular zeros come from, and how to classify any orbital state quickly.',
     theoryCards: [
       {
         title: 'Radial Nodes',
-        text: 'Radial nodes are spherical shells where the radial component crosses zero. Their count is n-l-1, and they control ring-like layering in radial distributions.',
+        text: 'Radial nodes are spherical shell surfaces where the radial function changes sign. They create concentric probability regions and are counted by n-l-1.',
       },
       {
         title: 'Angular Nodes',
-        text: 'Angular nodes arise from spherical harmonic structure and equal l in count. They appear as planes or cones slicing through orbital volume.',
+        text: 'Angular nodes come from spherical harmonics and equal l in count. They appear as planes or cones and split space into sign-opposed angular sectors.',
       },
       {
         title: 'Combined Node Budget',
-        text: 'Total nodes always equal n-1 for hydrogenic states. The partition between radial and angular nodes determines whether orbitals look shell-heavy or direction-heavy.',
+        text: 'Total nodes are always n-1 in hydrogenic states. Partitioning between radial and angular contributions predicts whether a state looks shell-dominated or direction-dominated.',
       },
       {
         title: 'Visualization Strategy',
-        text: 'Use slice views to inspect radial shell boundaries, then rotate to identify angular nodal planes. Both views are needed for complete state interpretation.',
+        text: 'Identify shells first in radial plots and slice cuts, then rotate in 3D to classify angular planes or cones. Both checks are required for correct state diagnosis.',
+      },
+      {
+        title: 'Radial Polynomial Roots',
+        text: 'Radial nodes are roots of associated Laguerre polynomial factors inside R_{n,l}(r). The polynomial order controls how many zero crossings occur.',
+      },
+      {
+        title: 'Node Topology by Family',
+        text: 's states have no angular nodes, p states have one plane, d states have two angular surfaces, and f states have three. Radial shells may still coexist.',
+      },
+      {
+        title: 'Why 3d Has Zero Radial Nodes',
+        text: 'For 3d, n-l-1 = 0. So all node budget is angular, which yields strong directional structure without concentric radial sign shells.',
+      },
+      {
+        title: 'Impact on Chemistry and Spectra',
+        text: 'Node placement changes overlap and transition amplitudes. Radial node mismatch reduces radial overlap, while angular mismatch suppresses directional coupling.',
+      },
+    ],
+    deepDiveSections: [
+      {
+        title: 'Node Accounting Master Formula',
+        text: 'Every hydrogenic orbital obeys a strict node partition. Start with the total, then split into radial and angular contributions.',
+        equation: 'N_{\\text{total}}=N_r+N_a=n-1',
+      },
+      {
+        title: 'Radial Node Rule',
+        text: 'Radial node count falls as l increases for fixed n, because more of the node budget is allocated to angular structure.',
+        equation: 'N_r=n-l-1',
+      },
+      {
+        title: 'Angular Node Rule',
+        text: 'Angular nodes grow directly with l. This growth drives lobe complexity and orientation dependence.',
+        equation: 'N_a=l',
+      },
+      {
+        title: 'Radial Probability Interpretation',
+        text: 'Radial plots expose shell-localized probability and reveal radial node crossings as exact zeros between peaks.',
+        equation: 'P(r)=4\\pi r^2|R_{n,l}(r)|^2',
+      },
+      {
+        title: 'Case Study 2s vs 2p',
+        text: '2s has one radial node and no angular nodes, while 2p has no radial nodes and one angular node. Same n, different partition, very different geometry.',
+      },
+      {
+        title: 'Case Study 3p',
+        text: '3p has one radial and one angular node, so it combines shell layering with directional splitting. This makes it a canonical mixed-topology example.',
+      },
+      {
+        title: 'Case Study 4f',
+        text: '4f allocates most complexity to angular structure, producing high anisotropy with multiple angular zero surfaces and rich lobe partitioning.',
+      },
+      {
+        title: 'Node Validation Sequence',
+        text: 'Compute node counts from quantum numbers, predict geometry, then verify with phase and slicing tools. This keeps interpretation reproducible.',
+      },
+      {
+        title: 'Common Interpretation Error',
+        text: 'Low-density tails are often mistaken for nodes. A true node requires strict zero amplitude, not simply low point intensity in sampled rendering.',
+      },
+      {
+        title: 'From Nodes to Reactivity',
+        text: 'Node placement modifies overlap pathways and therefore bond strength trends, ligand interactions, and orbital energy ordering in molecular fields.',
+      },
+    ],
+    supplementarySections: [
+      {
+        title: 'Laguerre-Polynomial Order and Radial Zeros',
+        text: 'Radial zeros are encoded in associated Laguerre structure. Increasing polynomial order increases radial sign changes and therefore shell-level node count.',
+        equation: 'p=n-l-1',
+      },
+      {
+        title: 'Radial Length-Scale Estimate',
+        text: 'For quick intuition, hydrogenic orbital extent scales approximately with n^2/Z. This helps forecast contraction trends before plotting.',
+        equation: 'r_{\\text{scale}}\\sim\\frac{n^2a_0}{Z}',
+      },
+      {
+        title: 'Fast Node Classification Protocol',
+        text: 'Use this order: compute N_total, split into N_r and N_a, then confirm radial shells with P(r) and angular boundaries with phase-slice inspection.',
+        equation: 'N_{\\text{total}}=n-1',
       },
     ],
     equations: [
@@ -821,6 +1290,16 @@ const learnTopics = [
         title: 'Angular Node Count',
         math: 'N_a = l',
         description: 'Angular structure contributes planes/cones defined by spherical harmonics.',
+      },
+      {
+        title: 'Total Node Count',
+        math: 'N_{\\text{total}} = n-1',
+        description: 'The full node budget that must equal radial plus angular contributions.',
+      },
+      {
+        title: 'Radial Distribution',
+        math: 'P(r)=4\\pi r^2|R_{n,l}(r)|^2',
+        description: 'Best graph for locating radial nodes as shell-level zero crossings.',
       },
     ],
     chartTitle: 'Node Partition by Orbital Family',
@@ -836,6 +1315,18 @@ const learnTopics = [
       { dataKey: 'radial', name: 'Radial Nodes', color: '#57d3ff' },
       { dataKey: 'angular', name: 'Angular Nodes', color: '#ff8a5b' },
     ],
+    secondaryCharts: [
+      {
+        title: 'Maximum Node Growth with n',
+        subtitle: 'Upper bounds for radial and angular contributions as shell index increases.',
+        data: moduleFiveNodeGrowthData,
+        lines: [
+          { dataKey: 'total', name: 'Total Node Cap', color: '#63d6ff' },
+          { dataKey: 'radial', name: 'Radial Cap', color: '#ffd265' },
+          { dataKey: 'angularCap', name: 'Angular Cap', color: '#ff8fb8' },
+        ],
+      },
+    ],
     table: {
       columns: ['State', 'n', 'l', 'Radial Nodes', 'Angular Nodes'],
       rows: [
@@ -846,9 +1337,27 @@ const learnTopics = [
       ],
     },
     imageSlots: [
-      { title: 'Radial Shell Cross-Section', description: 'Insert shell cutaway with node ring annotations.' },
-      { title: 'Angular Node Planes', description: 'Insert p/d/f nodal plane and cone overlays.' },
-      { title: 'Combined Node Diagram', description: 'Insert hybrid view showing both radial and angular nodes.' },
+      {
+        title: 'Hydrogen 1s Radial Function',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/1/1f/Hydrogen_1s_Radial.svg',
+        alt: 'Hydrogen 1s radial function graphic',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Reference radial behavior with no radial node crossing.',
+      },
+      {
+        title: 'Hydrogen 2s Radial Function',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/7/73/Hydrogen_2s_Radial.svg',
+        alt: 'Hydrogen 2s radial function graphic',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Shows one radial node through a sign-changing radial profile.',
+      },
+      {
+        title: 'Hydrogen 2p Radial Function',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/c/c9/Hydrogen_2p_Radial.svg',
+        alt: 'Hydrogen 2p radial function graphic',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Contrasts with 2s by shifting node budget from radial to angular structure.',
+      },
     ],
     faqs: [
       {
@@ -868,26 +1377,108 @@ const learnTopics = [
   {
     id: 'learn-probability-functions',
     label: '6. Probability Distribution Functions',
-    shortLabel: 'Probability Functions',
+    shortLabel: 'Probability Maps',
     eyebrow: 'Learn Module 6',
     title: 'Probability Distribution Functions: All Core Types',
-    message: 'Understand point density, radial distribution, angular weighting, cumulative probability, and expectation-value interpretations.',
+    message: 'A complete probability toolkit: local density, radial and angular distributions, cumulative probability, and expectation-value interpretation.',
     theoryCards: [
       {
         title: 'Point Probability Density',
-        text: 'The local probability density is |psi|^2. In 3D visualization, denser point clouds correspond to higher local measurement likelihood.',
+        text: 'Local measurement likelihood is set by |psi|^2 at each point in space. In scatter rendering, denser regions correspond to higher local detection probability.',
       },
       {
         title: 'Radial Distribution Function',
-        text: 'Radial probability includes Jacobian weighting: P(r)=4pi r^2|R(r)|^2. This creates peaks away from the origin even when local density is high near small r.',
+        text: 'Radial shell probability includes geometric Jacobian weighting, so maxima can occur away from the origin even if local density is highest near small r.',
       },
       {
         title: 'Angular Distribution',
-        text: 'Angular probability comes from |Y_lm(theta,phi)|^2 and encodes direction preference. It determines where lobes and nodal planes appear.',
+        text: 'Angular weighting from |Y_l^m|^2 sets direction preference, lobe placement, and angular node geometry.',
       },
       {
         title: 'Cumulative Probability',
-        text: 'Integrated probability up to radius r indicates how likely the electron is within a finite sphere, useful for comparing contracted vs diffuse states.',
+        text: 'Cumulative probability integrates shell contributions up to radius r, giving a direct way to compare contraction and spread across states or charge values Z.',
+      },
+      {
+        title: 'Normalization as Physical Consistency',
+        text: 'Any valid stationary state must integrate to unit total probability. Without normalization, comparisons across states lose physical meaning.',
+      },
+      {
+        title: 'Expectation Values',
+        text: 'Expectation values summarize distributions with weighted averages, such as mean radius and radial spread. They are not guaranteed to match the most probable radius.',
+      },
+      {
+        title: 'Most Probable vs Mean Radius',
+        text: 'The modal radius maximizes P(r), while mean radius uses integral weighting. Distinguishing these avoids common interpretation errors in radial plots.',
+      },
+      {
+        title: 'Probability in Visualization Workflows',
+        text: '3D point clouds, radial curves, and cumulative curves are complementary views of one normalized probability model. Read them together for robust interpretation.',
+      },
+    ],
+    deepDiveSections: [
+      {
+        title: 'Local Density Definition',
+        text: 'Pointwise probability density is the squared magnitude of the full wavefunction and is the core quantity behind volumetric orbital rendering.',
+        equation: '\\rho(r,\\theta,\\phi)=|\\psi_{n,l,m}(r,\\theta,\\phi)|^2',
+      },
+      {
+        title: 'Radial Jacobian Effect',
+        text: 'Spherical shells grow with r^2, so shell-level probability can rise away from the nucleus even while local density decays.',
+        equation: 'P(r)=4\\pi r^2|R_{n,l}(r)|^2',
+      },
+      {
+        title: 'Angular Weighting',
+        text: 'Directionality follows angular probability and encodes anisotropy. This is the origin of lobe-dominant directions in p, d, and f states.',
+        equation: 'W(\\theta,\\phi)=|Y_l^m(\\theta,\\phi)|^2',
+      },
+      {
+        title: 'Cumulative Distribution',
+        text: 'Integrating radial probability from 0 to r gives containment probability. It is ideal for comparing compact vs diffuse states.',
+        equation: 'C(r)=\\int_0^r P(r^{\\prime})\\,dr^{\\prime}',
+      },
+      {
+        title: 'Normalization Constraint',
+        text: 'All comparisons assume unit-normalized states. This constraint keeps probability interpretation consistent across modules.',
+        equation: '\\int |\\psi|^2 d\\tau = 1',
+      },
+      {
+        title: 'Expectation Radius',
+        text: 'Mean radius weights each shell by r and therefore emphasizes tail contributions more than a modal estimate does.',
+        equation: '\\langle r \\rangle = \\int_0^\\infty rP(r)\\,dr',
+      },
+      {
+        title: 'Variance and Spread',
+        text: 'Second-moment structure quantifies orbital spread and gives uncertainty context for radial extent differences.',
+        equation: '\\sigma_r^2=\\langle r^2\\rangle-\\langle r\\rangle^2',
+      },
+      {
+        title: 'Z-Scaling Intuition',
+        text: 'As Z increases for fixed n,l,m, distributions contract inward and cumulative probability reaches high values at smaller radii.',
+      },
+      {
+        title: 'Sampling Caution in 3D Clouds',
+        text: 'Finite Monte Carlo or grid sampling can blur low-density tails. Use radial and cumulative plots to validate point-cloud intuition.',
+      },
+      {
+        title: 'Interpretation Workflow',
+        text: 'Use local density for shape, radial distribution for shell peaks and nodes, and cumulative curves for containment thresholds.',
+      },
+    ],
+    supplementarySections: [
+      {
+        title: 'Most Probable Radius for 1s',
+        text: 'The highest radial probability location for a hydrogenic 1s state is not at the nucleus; it occurs at one Bohr-radius-scaled distance.',
+        equation: 'r_{\\mathrm{mp}}^{1s}=\\frac{a_0}{Z}',
+      },
+      {
+        title: 'Mean Radius for 1s',
+        text: 'The expectation radius exceeds the most-probable radius because distribution tails contribute to the integral-weighted average.',
+        equation: '\\langle r\\rangle_{1s}=\\frac{3a_0}{2Z}',
+      },
+      {
+        title: 'Peak-Condition Logic',
+        text: 'Maximum shell probability locations are found by differentiating radial probability and setting the derivative to zero.',
+        equation: '\\frac{dP(r)}{dr}=0',
       },
     ],
     equations: [
@@ -900,6 +1491,16 @@ const learnTopics = [
         title: 'Radial Distribution',
         math: 'P(r)=4\\pi r^2|R_{n,l}(r)|^2',
         description: 'Used to interpret where probability mass is concentrated over radius.',
+      },
+      {
+        title: 'Angular Probability Weighting',
+        math: 'W(\\theta,\\phi)=|Y_l^m(\\theta,\\phi)|^2',
+        description: 'Determines directional preference and lobe weighting in angular space.',
+      },
+      {
+        title: 'Normalization',
+        math: '\\int |\\psi|^2 d\\tau = 1',
+        description: 'Ensures all plotted probabilities are physically meaningful and comparable.',
       },
     ],
     chartTitle: 'Distribution Function Comparison',
@@ -917,6 +1518,18 @@ const learnTopics = [
       { dataKey: 'angular', name: 'Angular Weighting', color: '#39dcb1' },
       { dataKey: 'cumulative', name: 'Cumulative Probability', color: '#ff8a5b' },
     ],
+    secondaryCharts: [
+      {
+        title: 'Cumulative Probability by Radius',
+        subtitle: 'Illustrative cumulative containment trends for 1s, 2s, and 2p states.',
+        data: moduleSixCumulativeShellData,
+        lines: [
+          { dataKey: 'oneS', name: '1s', color: '#63d6ff' },
+          { dataKey: 'twoS', name: '2s', color: '#ffd265' },
+          { dataKey: 'twoP', name: '2p', color: '#ff8fb8' },
+        ],
+      },
+    ],
     table: {
       columns: ['Function Type', 'Expression Core', 'Physical Meaning', 'Best Use Case'],
       rows: [
@@ -927,9 +1540,27 @@ const learnTopics = [
       ],
     },
     imageSlots: [
-      { title: 'Radial Curve Panel', description: 'Insert radial distribution graph image with labeled peaks.' },
-      { title: 'Angular Heatmap', description: 'Add spherical angular probability map image.' },
-      { title: 'Cumulative Probability Plot', description: 'Insert cumulative curve with threshold markers.' },
+      {
+        title: 'Radial Probability Reference Plot',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Radial_Wave_function_Probability_for_Hydrogen_Atom.png',
+        alt: 'Hydrogen radial wave function probability graph',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Canonical radial probability reference used to identify shell peaks and node zeros.',
+      },
+      {
+        title: 'Probability Density of Hydrogen',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Probability_density_of_hydrogen.svg',
+        alt: 'Probability density distribution of hydrogen orbitals',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Spatial density mapping that complements radial-only views.',
+      },
+      {
+        title: 'Electron Probability Density Image',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Electron_in_hydrogen%2C_density_of_probability.jpg',
+        alt: 'Electron in hydrogen probability density illustration',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Visual intuition for probability concentration and diffuse tails.',
+      },
     ],
     faqs: [
       {
@@ -949,26 +1580,103 @@ const learnTopics = [
   {
     id: 'learn-solved-examples',
     label: '7. Solved Examples',
-    shortLabel: 'Solved Examples',
+    shortLabel: 'Solved Workflows',
     eyebrow: 'Learn Module 7',
     title: 'Solved Examples: From Inputs to Interpretation',
-    message: 'Walk through complete solved workflows that connect chosen quantum numbers to geometry, nodes, and probability outcomes.',
+    message: 'A step-by-step problem-solving module that converts quantum numbers into predictions, checks them against visualization, and explains discrepancies.',
     theoryCards: [
       {
         title: 'Example 1: 2p (n=2, l=1, m=0, Z=1)',
-        text: 'Predict one angular node, zero radial nodes, and dumbbell geometry oriented by m basis. Validate by rotating and slicing in the simulator.',
+        text: 'Predict one angular node and zero radial nodes, then verify dumbbell geometry and nodal plane orientation using rotate, phase, and slice controls.',
       },
       {
         title: 'Example 2: 3s (n=3, l=0, m=0, Z=1)',
-        text: 'Predict spherical symmetry and two radial nodes. Confirm by radial graph peaks and shell boundary transitions in slice mode.',
+        text: 'Predict spherical symmetry with two radial nodes. Confirm with radial plot zero crossings and concentric shell transitions in slice mode.',
       },
       {
         title: 'Example 3: 4d (n=4, l=2, m=1, Z=2)',
-        text: 'Predict two angular nodes, one radial node, and contracted density versus hydrogen due to larger Z.',
+        text: 'Predict two angular nodes and one radial node, then compare Z=2 contraction against Z=1 to validate charge-scaling intuition.',
       },
       {
         title: 'Interpretation Checklist',
-        text: 'Always compute node counts first, then predict shape family, then verify with phase display and radial chart. This sequence avoids interpretation errors.',
+        text: 'Use a fixed sequence: compute node budget, predict geometry and orientation, verify with phase and radial plots, then finalize interpretation.',
+      },
+      {
+        title: 'Error-Driven Refinement',
+        text: 'When prediction and render disagree, isolate whether the mismatch came from node counting, orientation assumptions, or state-input mistakes.',
+      },
+      {
+        title: 'Parameter Sensitivity Checks',
+        text: 'Vary one parameter at a time to separate effects cleanly: n for size and total nodes, l for family and angular structure, m for orientation, and Z for contraction.',
+      },
+      {
+        title: 'Cross-Validation Habit',
+        text: 'No solved example is complete until equation-based prediction and visualization-based evidence agree under multiple camera and slice settings.',
+      },
+      {
+        title: 'Communicating the Solution',
+        text: 'A strong solution report states inputs, computed node counts, expected geometry, observed evidence, and final physical interpretation in a traceable format.',
+      },
+    ],
+    deepDiveSections: [
+      {
+        title: 'Step 1: Parse Inputs',
+        text: 'Write n, l, m, and Z explicitly before any interpretation. Early input ambiguity is the most common source of incorrect conclusions.',
+      },
+      {
+        title: 'Step 2: Compute Node Budget',
+        text: 'Compute total, radial, and angular nodes and verify partition consistency before predicting geometry.',
+        equation: 'N_{\\text{total}}=n-1=(n-l-1)+l',
+      },
+      {
+        title: 'Step 3: Predict Family and Orientation',
+        text: 'Use l for family and m for orientation state. Record this prediction before looking at the rendered result to avoid visual bias.',
+      },
+      {
+        title: 'Step 4: Predict Radius Trend',
+        text: 'Estimate relative cloud size using hydrogenic scaling so you have an a priori expectation for contraction or expansion.',
+        equation: '\\langle r \\rangle \\propto \\frac{n^2}{Z}',
+      },
+      {
+        title: 'Step 5: Verify in Density View',
+        text: 'Confirm gross shape class and radial extent first. Density mode is best for structural silhouette checks.',
+      },
+      {
+        title: 'Step 6: Verify in Phase View',
+        text: 'Confirm sign regions and nodal boundaries. Phase mode catches hidden interpretation errors that density alone can miss.',
+      },
+      {
+        title: 'Step 7: Slice for Internal Nodes',
+        text: 'Use one or two slice planes to reveal internal shells and angular planes that may be occluded in full-volume rendering.',
+      },
+      {
+        title: 'Step 8: Compare Against Formulae',
+        text: 'If mismatch remains, return to equations and recompute node counts and selection constraints. Avoid patching conclusions ad hoc.',
+      },
+      {
+        title: 'Step 9: Document Confidence',
+        text: 'State confidence level and why. Confidence should rise only when independent checks align across equations, geometry, and plot evidence.',
+      },
+      {
+        title: 'Step 10: Generalize Pattern',
+        text: 'Extract reusable rules from the solved case so future states can be solved faster with fewer errors.',
+      },
+    ],
+    supplementarySections: [
+      {
+        title: 'Spectroscopic Back-Check',
+        text: 'After solving geometry and nodes, validate energetic plausibility by comparing predicted transition energy with observed wavelength data.',
+        equation: '\\Delta E=\\frac{hc}{\\lambda}',
+      },
+      {
+        title: 'Quantifying Prediction Error',
+        text: 'A simple relative-error metric helps compare model predictions against measured or reference values in a reproducible way.',
+        equation: '\\varepsilon_{\\mathrm{rel}}=\\frac{|x_{\\mathrm{pred}}-x_{\\mathrm{ref}}|}{|x_{\\mathrm{ref}}|}',
+      },
+      {
+        title: 'Capacity Consistency Check',
+        text: 'For shell-level reasoning, keep state counting consistent with degeneracy rules. This avoids occupancy mistakes in multi-step solved examples.',
+        equation: 'g_n=2n^2\\;\\text{(including spin)}',
       },
     ],
     equations: [
@@ -982,12 +1690,33 @@ const learnTopics = [
         math: '\\langle r \\rangle \\propto \\frac{n^2}{Z}',
         description: 'Gives quick intuition for cloud size scaling before simulation.',
       },
+      {
+        title: 'Angular Momentum Magnitude',
+        math: '|\\mathbf{L}|=\\hbar\\sqrt{l(l+1)}',
+        description: 'Adds a quantitative check on orbital angular character in solved states.',
+      },
+      {
+        title: 'Orientation Multiplicity',
+        math: '2l+1',
+        description: 'Counts how many m orientations are available at fixed n and l.',
+      },
     ],
     chartTitle: 'Solved Workflow Confidence Curve',
     chartSubtitle: 'Conceptual confidence gain while progressing through a worked problem.',
     chartData: workflowChartData,
     chartLines: [
       { dataKey: 'confidence', name: 'Interpretation Confidence', color: '#30c6ff' },
+    ],
+    secondaryCharts: [
+      {
+        title: 'Predicted vs Verified Accuracy',
+        subtitle: 'How a disciplined solve sequence improves agreement between forecast and observed visualization outcomes.',
+        data: moduleSevenValidationData,
+        lines: [
+          { dataKey: 'predicted', name: 'Prediction Confidence', color: '#8ed7ff' },
+          { dataKey: 'verified', name: 'Verified Confidence', color: '#66f0c7' },
+        ],
+      },
     ],
     table: {
       columns: ['Example', 'Input Set', 'Predicted Nodes', 'Predicted Geometry', 'Validation Step'],
@@ -999,9 +1728,27 @@ const learnTopics = [
       ],
     },
     imageSlots: [
-      { title: 'Solved Example Worksheet', description: 'Insert worksheet screenshot with parameter-to-result notes.' },
-      { title: 'Orbital Snapshot Gallery', description: 'Add side-by-side images for solved examples.' },
-      { title: 'Instructor Annotation Layer', description: 'Insert marked-up image showing node callouts.' },
+      {
+        title: 'Hydrogen Orbitals Overview',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Hydrogen_Orbitals.png',
+        alt: 'Hydrogen orbital shapes overview',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Reference panel for solved-family identification during worked examples.',
+      },
+      {
+        title: 'Hydrogen 3p Orbital Example',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Hydrogen_orbital_3p.png',
+        alt: 'Hydrogen 3p orbital image',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Useful benchmark for mixed radial/angular node interpretation.',
+      },
+      {
+        title: 'Hydrogen Density Plot Atlas',
+        src: 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Hydrogen_Density_Plots.png',
+        alt: 'Hydrogen density plot atlas for multiple orbitals',
+        credit: 'Source: Wikimedia Commons',
+        description: 'Multi-case visual sheet for rapid validation in worked solutions.',
+      },
     ],
     faqs: [
       {
@@ -1341,11 +2088,905 @@ const ContactChips = () => (
   </>
 );
 
+const ModuleOneSectionHeading = ({ title }) => (
+  <div className="info-section-heading module1-heading">
+    <h2>{title}</h2>
+    <span className="module1-heading-rule" aria-hidden="true"></span>
+  </div>
+);
+
+const moduleOneSectionExpansionNote = 'Read each subsection through a five-step validation loop: define the physical claim, identify the equation that governs it, check the dimensional meaning of every symbol, compare the prediction with at least one plotted trend, and finally verify the visual pattern in the 3D view. This discipline prevents common errors such as interpreting amplitude as probability density, misreading phase sign as electric charge, or treating sparse tails as real nodes. When all five checks agree, your interpretation is typically robust enough for classroom teaching, report writing, and exam-level reasoning. If one check fails, pause and reconcile the mismatch before proceeding to the next concept. Over time, this method builds intuition without sacrificing mathematical accuracy.';
+
+const moduleTwoSectionExpansionNote = 'Use each subsection as an operator-to-observable translation drill. First state which quantity is quantized, then identify the eigenvalue equation that constrains it, then map that constraint to orbital size, orientation, node count, or transition behavior. Next, test whether the simulator output obeys that prediction under camera rotation, phase toggling, and slice inspection. Finally, connect the same conclusion to a spectroscopic or chemical consequence so the concept is not isolated to one representation. This procedure converts quantum numbers from memorized symbols into a reproducible analysis workflow that remains accurate across solved problems and real data interpretation.';
+
+const ModuleOneCoreTheoryContent = () => (
+  <>
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="Core Quantum Theory" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p className="module1-intro-note">A 10-part foundation for understanding every visual in this simulator.</p>
+      <p>
+        Module 1 explains why quantum mechanics was needed, how core equations were built,
+        and how those equations map to orbitals, nodes, and probability clouds.
+      </p>
+      <p>
+        The flow below starts with the failure of classical physics and ends with direct interpretation
+        of what you control in the simulator.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="1) Why Classical Physics Failed" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <div className="module1-split">
+        <div className="module1-text-flow">
+          <p>
+            Classical theory predicted that blackbody radiation should keep rising at shorter wavelengths.
+            That prediction diverges in the ultraviolet range and is known as the ultraviolet catastrophe.
+          </p>
+          <p>The two equations below summarize the mismatch between classical and quantum descriptions:</p>
+          <div className="module1-equation-stack">
+            <ExpandableFormula className="compact module1-formula-card" math={'B_\\lambda(T)=\\frac{2ck_B T}{\\lambda^4}'} />
+            <ExpandableFormula className="compact module1-formula-card" math={'B_\\lambda(\\lambda,T)=\\frac{2hc^2}{\\lambda^5}\\frac{1}{e^{hc/(\\lambda k_B T)}-1}'} />
+          </div>
+          <p>
+            The first is Rayleigh-Jeans (classical). The second is Planck&apos;s law (quantum), which matches experiment.
+          </p>
+        </div>
+        <figure className="module1-figure is-wide">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/1/19/Black_body.svg"
+            alt="Blackbody radiation comparison showing ultraviolet catastrophe"
+            loading="lazy"
+          />
+          <figcaption>Ultraviolet catastrophe reference figure. Source: Wikimedia Commons.</figcaption>
+        </figure>
+      </div>
+
+      <div className="module1-graph-panel">
+        <h3>Ultraviolet Catastrophe Graph</h3>
+        <p>Normalized spectral radiance versus wavelength for Planck and Rayleigh-Jeans models.</p>
+        <div className="module1-graph-wrap">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={moduleOneBlackbodyData} margin={{ top: 6, right: 16, left: 8, bottom: 10 }}>
+              <CartesianGrid stroke="#29425c" strokeDasharray="4 4" />
+              <XAxis dataKey="wavelengthNm" stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => `${value}`} />
+              <YAxis stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => Number(value).toFixed(1)} />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                labelFormatter={(value) => `Wavelength: ${value} nm`}
+                formatter={(value, name) => [`${Number(value).toFixed(3)} (normalized)`, name]}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="planck3500" name="Planck 3500 K" stroke="#ff9f6e" strokeWidth={2.15} dot={false} />
+              <Line type="monotone" dataKey="planck5000" name="Planck 5000 K" stroke="#63d6ff" strokeWidth={2.15} dot={false} />
+              <Line type="monotone" dataKey="planck6500" name="Planck 6500 K" stroke="#ffe07a" strokeWidth={2.15} dot={false} />
+              <Line type="monotone" dataKey="rayleigh6500" name="Rayleigh-Jeans 6500 K" stroke="#f04f8f" strokeWidth={2.1} strokeDasharray="7 5" dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="2) Planck and Energy Quanta" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <div className="module1-split">
+        <div className="module1-text-flow">
+          <p>
+            Max Planck resolved the blackbody problem by proposing that energy exchange is quantized.
+            Radiation is emitted and absorbed in discrete packets.
+          </p>
+          <ExpandableFormula className="compact module1-formula-card" math={'E=h\\nu'} />
+          <p>
+            This single relation established the quantum energy scale and became the basis for spectroscopy,
+            transitions, and later quantum wave mechanics.
+          </p>
+        </div>
+        <figure className="module1-figure">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Max_Planck_1933.jpg"
+            alt="Max Planck portrait"
+            loading="lazy"
+          />
+          <figcaption>Max Planck. Source: Wikimedia Commons.</figcaption>
+        </figure>
+      </div>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="3) Photoelectric Effect and Einstein" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <div className="module1-split module1-split-reverse">
+        <figure className="module1-figure is-wide">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/5/52/Photoelectric_effect_-_stopping_voltage_diagram_for_zinc_-_English.svg"
+            alt="Photoelectric effect stopping voltage diagram"
+            loading="lazy"
+          />
+          <figcaption>Photoelectric-effect stopping-voltage diagram. Source: Wikimedia Commons.</figcaption>
+        </figure>
+        <div className="module1-text-flow">
+          <p>
+            Einstein extended Planck&apos;s idea and explained why electrons are emitted only above a threshold frequency.
+            Intensity changes the number of emitted electrons, but not their maximum kinetic energy at fixed frequency.
+          </p>
+          <ExpandableFormula className="compact module1-formula-card" math={'K_{max}=h\\nu-\\phi'} />
+          <p>
+            Here phi is the work function of the material. Below threshold, emission does not occur.
+          </p>
+        </div>
+      </div>
+
+      <div className="module1-graph-panel">
+        <h3>Photoelectric Effect: Maximum Kinetic Energy vs Frequency</h3>
+        <p>For a representative metal with work function phi = 2.3 eV.</p>
+        <div className="module1-graph-wrap">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={moduleOnePhotoelectricData} margin={{ top: 6, right: 16, left: 8, bottom: 10 }}>
+              <CartesianGrid stroke="#29425c" strokeDasharray="4 4" />
+              <XAxis dataKey="frequencyPHz" stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => `${value}`} />
+              <YAxis stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => Number(value).toFixed(1)} />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                labelFormatter={(value) => `Frequency: ${value} PHz`}
+                formatter={(value, name) => [`${Number(value).toFixed(3)} eV`, name]}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="kineticEnergyEV" name="Kmax" stroke="#66f0c7" strokeWidth={2.3} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="4) Matter Waves (de Broglie)" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p>
+        Electrons show wave behavior. Their wavelength is linked directly to momentum.
+      </p>
+      <ExpandableFormula className="compact module1-formula-card" math={'\\lambda=\\frac{h}{p}'} />
+      <p>
+        This relation explains electron diffraction and why bound electronic states around nuclei form standing-wave-like structures.
+      </p>
+      <div className="module1-graph-panel">
+        <h3>de Broglie Wavelength vs Kinetic Energy</h3>
+        <p>Wavelength decreases as electron momentum rises.</p>
+        <div className="module1-graph-wrap">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={moduleOneDeBroglieData} margin={{ top: 6, right: 16, left: 8, bottom: 10 }}>
+              <CartesianGrid stroke="#29425c" strokeDasharray="4 4" />
+              <XAxis dataKey="kineticEV" stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => `${value}`} />
+              <YAxis stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => Number(value).toFixed(0)} />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                labelFormatter={(value) => `Kinetic energy: ${value} eV`}
+                formatter={(value) => [`${Number(value).toFixed(2)} pm`, 'Wavelength']}
+              />
+              <Line type="monotone" dataKey="wavelengthPm" stroke="#ffd265" strokeWidth={2.3} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="5) Born Interpretation" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p>
+        The wavefunction is not a trajectory. It is a probability amplitude.
+      </p>
+      <ExpandableFormula className="compact module1-formula-card" math={'P(r,\\theta,\\phi)=|\\psi(r,\\theta,\\phi)|^2'} />
+      <p>
+        Orbital plots in this simulator visualize this probability density, so bright regions indicate higher detection probability.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="6) Heisenberg Uncertainty Principle" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <div className="module1-split">
+        <div className="module1-text-flow">
+          <p>
+            Position and momentum are constrained by a fundamental lower bound.
+            This is a structural feature of quantum states, not an instrument defect.
+          </p>
+          <ExpandableFormula className="compact module1-formula-card" math={'\\Delta x\\,\\Delta p\\geq\\frac{\\hbar}{2}'} />
+          <p>
+            As position uncertainty decreases, minimum momentum uncertainty increases.
+          </p>
+        </div>
+        <figure className="module1-figure">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Werner_Heisenberg_Portrait_%283x4_cropped%29.jpg"
+            alt="Werner Heisenberg portrait"
+            loading="lazy"
+          />
+          <figcaption>Werner Heisenberg. Source: Wikimedia Commons.</figcaption>
+        </figure>
+      </div>
+
+      <div className="module1-graph-panel">
+        <h3>Minimum Momentum Uncertainty vs Position Uncertainty</h3>
+        <p>Scaled in 10^-24 kg m/s for readability.</p>
+        <div className="module1-graph-wrap">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={moduleOneUncertaintyData} margin={{ top: 6, right: 16, left: 8, bottom: 10 }}>
+              <CartesianGrid stroke="#29425c" strokeDasharray="4 4" />
+              <XAxis dataKey="deltaXPm" stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => `${value}`} />
+              <YAxis stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => Number(value).toFixed(2)} />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                labelFormatter={(value) => `Delta x: ${value} pm`}
+                formatter={(value) => [`${Number(value).toFixed(3)} x10^-24 kg m/s`, 'Delta p min']}
+              />
+              <Line type="monotone" dataKey="minDeltaPScaled" stroke="#67f0c7" strokeWidth={2.3} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="7) Schrödinger Equation for Hydrogenic Atoms" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p>
+        Bound states are obtained by solving the time-independent Schrödinger equation with the Coulomb potential.
+      </p>
+      <ExpandableFormula className="compact module1-formula-card" math={'-\\frac{\\hbar^2}{2\\mu}\\nabla^2\\psi-\\frac{Ze^2}{4\\pi\\epsilon_0 r}\\psi=E\\psi'} />
+      <p>
+        This yields quantized energies and wavefunctions that form the orbital families shown in visualization.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="8) Separation, Quantum Numbers, and Orbital Structure" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p>
+        The solution separates into radial and angular components, each tied to quantum numbers.
+      </p>
+      <ExpandableFormula className="compact module1-formula-card" math={'\\psi_{n,l,m}(r,\\theta,\\phi)=R_{n,l}(r)Y_l^m(\\theta,\\phi)'} />
+      <ul className="module1-bullet-list">
+        <li>n sets the shell scale and principal energy level.</li>
+        <li>l sets orbital shape family (s, p, d, f).</li>
+        <li>m sets orientation for a chosen quantization axis.</li>
+      </ul>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="9) Radial Probability Distribution (1s, 2s, 2p)" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p>
+        Radial probability identifies where the electron is most likely to be found at a distance r from the nucleus.
+      </p>
+      <div className="module1-graph-panel">
+        <h3>Hydrogen Radial Probability Curves</h3>
+        <p>Comparison of normalized radial trends for 1s, 2s, and 2p states.</p>
+        <div className="module1-graph-wrap">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={moduleOneRadialDistributionData} margin={{ top: 6, right: 16, left: 8, bottom: 10 }}>
+              <CartesianGrid stroke="#29425c" strokeDasharray="4 4" />
+              <XAxis dataKey="radiusA0" stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => `${value}`} />
+              <YAxis stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => Number(value).toFixed(2)} />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                labelFormatter={(value) => `r/a0: ${value}`}
+                formatter={(value, name) => [`${Number(value).toFixed(4)}`, name]}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="oneS" name="1s" stroke="#63d6ff" strokeWidth={2.15} dot={false} />
+              <Line type="monotone" dataKey="twoS" name="2s" stroke="#ffe07a" strokeWidth={2.15} dot={false} />
+              <Line type="monotone" dataKey="twoP" name="2p" stroke="#ff8fb8" strokeWidth={2.15} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="10) Direct Mapping to This Simulator" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p>
+        The interface is a visual expression of core quantum theory, not a decorative model.
+      </p>
+      <ul className="module1-bullet-list">
+        <li>n changes shell scale and radial node count.</li>
+        <li>l changes angular structure and orbital family.</li>
+        <li>m rotates orientation of the same family.</li>
+        <li>Phase and slice views expose sign structure and interior nodes.</li>
+      </ul>
+      <p>
+        Reading these visuals through the equations above is the key learning goal of Module 1.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="11) Quantitative Validation and Common Misconceptions" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p>
+        A physically correct interpretation should pass three checks: normalization, node consistency, and spectral consistency.
+        If one fails, the interpretation is incomplete even if the rendered image looks plausible.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'\\int |\\psi|^2\\,d\\tau=1'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'\\Delta E = h\\nu'} />
+      </div>
+      <ul className="module1-bullet-list">
+        <li>Phase colors represent wavefunction sign, not positive or negative electric charge.</li>
+        <li>Orbital surfaces are probability structures, not classical electron trajectories.</li>
+        <li>Radial and angular node counts must agree with n and l for any valid state interpretation.</li>
+      </ul>
+      <p>
+        Treat this section as a reliability filter: if your explanation satisfies these checks, your model-to-visual mapping is usually sound.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="12) Correspondence Principle and the High-n Limit" />
+      <p className="module1-detail-extension">{moduleOneSectionExpansionNote}</p>
+      <p>
+        Quantum and classical descriptions are not disconnected theories. In the large-n regime, level spacing compresses and behavior approaches classical expectations.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'E_n=-\\frac{13.6}{n^2}\\,\\text{eV}'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'\\Delta E_{n\\to n+1}\\approx\\frac{27.2}{n^3}\\,\\text{eV}\\quad(n\\gg1)'} />
+      </div>
+      <p>
+        This trend explains why spectral lines crowd at high principal quantum number and why quantum predictions recover smooth classical-like behavior in coarse resolution limits.
+      </p>
+    </AnimatedSection>
+  </>
+);
+
+const ModuleTwoQuantumNumbersContent = () => (
+  <>
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="Quantum Numbers, Eigenstates, Angular Momentum, and Spherical Harmonics in Full Detail" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p className="module1-intro-note">The complete mathematical framework behind atomic orbital states.</p>
+      <p>
+        Every orbital displayed in this simulator is a mathematically allowed stationary state of an electron in the Coulomb field.
+        These states are exact solutions of the Schrodinger equation, not arbitrary geometric sketches.
+      </p>
+      <p>
+        To understand quantum numbers deeply, one must track their mathematical origin, the operator whose value each number represents,
+        and how the full set maps directly to orbital size, shape, orientation, and nodal structure.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="1) From the Schrodinger Equation to Allowed States" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        The starting point is the time-independent Schrodinger equation for a hydrogen-like species.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'-\\frac{\\hbar^2}{2\\mu}\\nabla^2\\psi(r,\\theta,\\phi)-\\frac{Ze^2}{4\\pi\\epsilon_0 r}\\psi(r,\\theta,\\phi)=E\\psi(r,\\theta,\\phi)'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'V(r)=-\\frac{Ze^2}{4\\pi\\epsilon_0 r}'} />
+      </div>
+      <p>
+        The negative sign in the potential is physically essential: it encodes attraction between nucleus and electron.
+        Because the potential depends only on radius r, the problem is spherically symmetric and is naturally expressed in (r, theta, phi).
+      </p>
+      <p>
+        That symmetry is the structural reason angular momentum operators appear, and it is also the reason orbital states are organized by quantum numbers.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="2) Separation of Variables and the Birth of Quantum Numbers" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        The wavefunction is separated into radial and angular factors so each physical dependency can be solved under its own boundary conditions.
+      </p>
+      <ExpandableFormula className="compact module1-formula-card" math={'\\psi(r,\\theta,\\phi)=R(r)\\Theta(\\theta)\\Phi(\\phi)'} />
+      <p>
+        This is more than a formal trick. It isolates distance-dependent behavior from directional behavior,
+        and each resulting differential equation contributes an allowed set of constants.
+      </p>
+      <p>
+        Those constants are exactly the quantum numbers. Their allowed values are forced by regularity, single-valuedness,
+        and normalizability of the full solution.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="3) Eigenstates and Eigenvalues in Physical Detail" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        In quantum mechanics, observables are represented by operators. A state is an eigenstate when operator action returns
+        the same state times a constant eigenvalue.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'\\hat{A}\\psi=a\\psi'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'\\hat{H}\\psi=E\\psi'} />
+      </div>
+      <p>
+        Atomic orbitals are energy eigenstates of the Hamiltonian, so each stationary orbital carries a definite allowed energy.
+        This is why atomic spectra are discrete: transitions occur between quantized eigenvalues, not a continuous continuum.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="4) Angular Momentum Operators and Quantization" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        In a spherically symmetric Coulomb field, orbital angular momentum is conserved and the angular wavefunction must satisfy
+        simultaneous eigenvalue equations for total angular momentum and its z-projection.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'\\hat{L}^2Y_\\ell^m=\\ell(\\ell+1)\\hbar^2Y_\\ell^m'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'L=\\sqrt{\\ell(\\ell+1)}\\hbar'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'\\hat{L}_zY_\\ell^m=m\\hbar Y_\\ell^m'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'L_z=m\\hbar'} />
+      </div>
+      <p>
+        The first pair quantizes orbital angular momentum magnitude, while the second pair sets orientation projection along the chosen axis.
+        These are measurable quantities, not symbolic labels.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="5) Spherical Harmonics and Orbital Geometry" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <div className="module1-split">
+        <div className="module1-text-flow">
+          <p>
+            The angular solutions Y_l^m(theta, phi) are the spherical harmonics. They define lobe count, nodal planes and cones,
+            orientation, and phase sign regions. Orbital shape is therefore a direct mathematical consequence of angular eigenfunctions.
+          </p>
+          <div className="module1-equation-stack">
+            <ExpandableFormula className="compact module1-formula-card" math={'Y_\\ell^m(\\theta,\\phi)'} />
+            <ExpandableFormula className="compact module1-formula-card" math={'Y_0^0=\\text{constant}'} />
+            <ExpandableFormula className="compact module1-formula-card" math={'Y_1^0\\propto\\cos\\theta'} />
+            <ExpandableFormula className="compact module1-formula-card" math={'\\theta=\\frac{\\pi}{2}\\Rightarrow\\cos\\theta=0'} />
+          </div>
+          <p>
+            The s case has no angular dependence and is spherically symmetric. The p case has a nodal plane at theta = pi/2,
+            producing two opposite lobes. For l = 2, spherical harmonics generate d-family multi-lobed structures.
+          </p>
+        </div>
+        <figure className="module1-figure is-wide">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Spherical_Harmonics.png/1280px-Spherical_Harmonics.png"
+            alt="Spherical harmonics gallery"
+            loading="lazy"
+          />
+          <figcaption>Spherical harmonics gallery. Source: Wikimedia Commons.</figcaption>
+        </figure>
+      </div>
+      <figure className="module1-figure is-wide">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Atomic_orbitals_n1234_m-eigenstates.png/1280px-Atomic_orbitals_n1234_m-eigenstates.png"
+          alt="s p d f orbital comparison"
+          loading="lazy"
+        />
+        <figcaption>s/p/d/f orbital comparison with m-state structure. Source: Wikimedia Commons.</figcaption>
+      </figure>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="6) Principal Quantum Number n" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        The principal quantum number arises from the radial equation and sets shell index, baseline energy, radial extent, and total node count.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'n=1,2,3,\\dots'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'E_n=-\\frac{13.6Z^2}{n^2}\\text{ eV}'} />
+      </div>
+      <p>
+        Larger n gives larger average radius, weaker binding, and richer radial oscillation structure.
+        In visualization, this appears as larger clouds with increased radial layering.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="7) Azimuthal Quantum Number l" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        The azimuthal quantum number determines orbital family and angular complexity, with allowed values tied to n.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'\\ell=0,1,2,\\dots,n-1'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'N_{\\text{angular}}=\\ell'} />
+      </div>
+      <p>
+        It sets angular momentum magnitude and the number of angular nodes, so l directly controls orbital shape family
+        and nodal surface count.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="8) Magnetic Quantum Number m" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        For fixed n and l, m selects the orientation state. This is the directional degree of freedom that appears as rotated
+        but family-equivalent orbitals in isotropic fields.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'m=-\\ell,\\dots,+\\ell'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'\\text{Number of orientations}=2\\ell+1'} />
+      </div>
+      <p>
+        The simulator makes this visible when m changes lobe alignment while preserving the parent orbital family fixed by l.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="9) Spin Quantum Number" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        Electron spin is intrinsic angular momentum and is independent of orbital motion around the nucleus.
+      </p>
+      <ExpandableFormula className="compact module1-formula-card" math={'m_s=\\pm\\frac12'} />
+      <p>
+        Although spatial orbital shape is set by n, l, and m, complete electronic state specification also requires spin.
+        This becomes essential when constructing many-electron configurations and selection rules.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="10) Nodes in Full Detail and Direct Orbital Mapping" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        Node accounting unifies radial and angular structure and provides the cleanest bridge from equations to 3D orbital interpretation.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'N_{\\text{total}}=n-1'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'N_{\\text{angular}}=\\ell'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'N_{\\text{radial}}=n-\\ell-1'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'3p: N_{\\text{total}}=2; N_{\\text{angular}}=1; N_{\\text{radial}}=1'} />
+      </div>
+      <p>
+        The radial probability plot below shows how node structure emerges as radius-dependent zero crossings and redistributions in density.
+      </p>
+      <div className="module1-graph-panel">
+        <h3>Radial Node Probability Plot</h3>
+        <p>Normalized radial probability trends for 1s, 2s, and 3s hydrogenic states.</p>
+        <div className="module1-graph-wrap">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={moduleTwoRadialNodeData} margin={{ top: 6, right: 16, left: 8, bottom: 10 }}>
+              <CartesianGrid stroke="#29425c" strokeDasharray="4 4" />
+              <XAxis dataKey="radiusA0" stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => `${value}`} />
+              <YAxis stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => Number(value).toFixed(2)} />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                labelFormatter={(value) => `r/a0: ${value}`}
+                formatter={(value, name) => [`${Number(value).toFixed(4)}`, name]}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="oneS" name="1s" stroke="#63d6ff" strokeWidth={2.15} dot={false} />
+              <Line type="monotone" dataKey="twoS" name="2s" stroke="#ffe07a" strokeWidth={2.15} dot={false} />
+              <Line type="monotone" dataKey="threeS" name="3s" stroke="#ff8fb8" strokeWidth={2.15} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="11) Selection Rules and Spectroscopic Consequences" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        Quantum numbers are not only geometric labels; they govern which transitions are allowed in electromagnetic spectroscopy.
+        These rules explain why some spectral lines are strong while others are forbidden.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'\\Delta l=\\pm1'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'\\Delta m=0,\\pm1'} />
+      </div>
+      <p>
+        In practical terms, state geometry, phase structure, and operator selection rules work together: not every mathematically imaginable jump is physically observable.
+      </p>
+      <p>
+        This is why quantum number literacy is essential for interpreting both orbital renderings and real spectroscopic measurements.
+      </p>
+    </AnimatedSection>
+
+    <AnimatedSection className="info-section module1-section">
+      <ModuleOneSectionHeading title="12) Degeneracy Counting and State Capacity" />
+      <p className="module1-detail-extension">{moduleTwoSectionExpansionNote}</p>
+      <p>
+        Beyond individual orbital interpretation, quantum numbers also define how many states are available in each shell and subshell.
+        This counting is essential for connecting atomic orbitals to electronic configuration logic.
+      </p>
+      <div className="module1-equation-stack">
+        <ExpandableFormula className="compact module1-formula-card" math={'g_l=2l+1'} />
+        <ExpandableFormula className="compact module1-formula-card" math={'g_n=n^2\\quad(\\text{orbital states}),\\qquad G_n=2n^2\\quad(\\text{including spin})'} />
+      </div>
+      <p>
+        These degeneracy relations provide a compact consistency check when moving from one-electron hydrogenic intuition to multi-electron shell-capacity reasoning.
+      </p>
+    </AnimatedSection>
+  </>
+);
+
+const ModuleInlineFigure = ({ slot }) => {
+  if (!slot?.src) return null;
+
+  const captionParts = [slot.title, slot.description, slot.credit].filter(Boolean);
+
+  return (
+    <figure className="module1-figure is-wide">
+      <img src={slot.src} alt={slot.alt || slot.title} loading="lazy" />
+      <figcaption>{captionParts.join(' ')}</figcaption>
+    </figure>
+  );
+};
+
+const ModuleLongFormChartPanel = ({ title, subtitle, data, lines }) => {
+  const xAxisKey = Array.isArray(data) && data.length > 0 ? Object.keys(data[0])[0] : 'x';
+
+  return (
+    <div className="module1-graph-panel">
+      <h3>{title}</h3>
+      {subtitle && <p>{subtitle}</p>}
+      <div className="module1-graph-wrap">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 6, right: 16, left: 8, bottom: 10 }}>
+            <CartesianGrid stroke="#29425c" strokeDasharray="4 4" />
+            <XAxis dataKey={xAxisKey} stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => `${value}`} />
+            <YAxis stroke="#a7c9e8" tick={{ fill: '#cfe5f8' }} tickFormatter={(value) => (typeof value === 'number' ? Number(value).toFixed(2) : value)} />
+            <Tooltip
+              contentStyle={chartTooltipStyle}
+              formatter={(value, name) => [typeof value === 'number' ? Number(value).toFixed(4) : value, name]}
+            />
+            <Legend />
+            {Array.isArray(lines) && lines.map((line) => (
+              <Line key={line.dataKey} type="monotone" dataKey={line.dataKey} name={line.name} stroke={line.color} strokeWidth={2.15} dot={false} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+const ModuleThreeToSevenLongFormContent = ({ topic }) => {
+  const theorySections = Array.isArray(topic.theoryCards)
+    ? topic.theoryCards.map((item) => ({ ...item, kind: 'theory' }))
+    : [];
+  const deepSections = Array.isArray(topic.deepDiveSections)
+    ? topic.deepDiveSections.map((item) => ({ ...item, kind: 'deep' }))
+    : [];
+  const supplementalSections = Array.isArray(topic.supplementarySections)
+    ? topic.supplementarySections.map((item) => ({ ...item, kind: 'supplement' }))
+    : [];
+  const sections = [...theorySections, ...deepSections, ...supplementalSections];
+
+  const inlineImages = Array.isArray(topic.imageSlots)
+    ? topic.imageSlots.filter((slot) => slot?.src)
+    : [];
+  const imageAnchorIndices = [0, 3, 7].filter((index) => index < sections.length);
+  const sectionImageMap = new Map();
+  imageAnchorIndices.forEach((sectionIndex, imageIndex) => {
+    const slot = inlineImages[imageIndex];
+    if (slot) sectionImageMap.set(sectionIndex, slot);
+  });
+
+  const equationSectionNumber = sections.length + 1;
+  const primaryChartSectionNumber = equationSectionNumber + 1;
+  const secondaryChartStart = primaryChartSectionNumber + 1;
+  const secondaryChartCount = Array.isArray(topic.secondaryCharts) ? topic.secondaryCharts.length : 0;
+  const tableSectionNumber = secondaryChartStart + secondaryChartCount;
+  const closingSectionNumber = tableSectionNumber + 1;
+
+  return (
+    <>
+      <AnimatedSection className="info-section module1-section">
+        <ModuleOneSectionHeading title={topic.title} />
+        <p className="module1-intro-note">{topic.message}</p>
+        <p>
+          This module is written as a rigorous long-form walkthrough. Each heading is intended to connect formal equations,
+          physical interpretation, and the exact visual patterns you can verify in the simulator.
+        </p>
+        <p>
+          Use this sequence as a scientific reading path: define the concept, test with equations, and validate with phase,
+          slicing, and radial plots before making conclusions.
+        </p>
+        <p>
+          To deepen retention, pause after every section and restate the claim in your own words, then cross-check one equation,
+          one chart trend, and one image cue before moving on. This deliberate pass turns each heading from passive reading into
+          a reproducible scientific reasoning step that can be reused in classroom explanation, exam derivation, and simulator practice.
+        </p>
+      </AnimatedSection>
+
+      {sections.map((section, index) => {
+        const number = index + 1;
+        const imageSlot = sectionImageMap.get(index);
+        const splitClassName = `module1-split ${number % 2 === 0 ? 'module1-split-reverse' : ''}`.trim();
+
+        return (
+          <AnimatedSection className="info-section module1-section" key={`${section.title}-${number}`}>
+            <ModuleOneSectionHeading title={`${number}) ${section.title}`} />
+            {imageSlot ? (
+              <div className={splitClassName}>
+                <div className="module1-text-flow">
+                  <p>{section.text}</p>
+                  <p>
+                    {section.kind === 'theory'
+                      ? 'Interpret this heading with both geometry and probability in mind: shape alone is incomplete unless node structure and phase sign are also consistent.'
+                      : section.kind === 'deep'
+                        ? 'Use this as a quantitative checkpoint. If rendered behavior disagrees with this relation, verify quantum inputs and node accounting before revising physical interpretation.'
+                        : 'Treat this as an advanced extension layer: connect it to at least one equation or chart before accepting a final interpretation.'}
+                  </p>
+                  <p>
+                    A strong analysis should also identify what would falsify the current claim. For example, if the predicted node count,
+                    orientation pattern, or radial trend is not observed under rotation and slice inspection, return to the quantum-number
+                    constraints before accepting the conclusion. This habit keeps interpretation accurate and prevents confirmation bias.
+                  </p>
+                  {section.equation && <ExpandableFormula className="compact module1-formula-card" math={section.equation} />}
+                </div>
+                <ModuleInlineFigure slot={imageSlot} />
+              </div>
+            ) : (
+              <>
+                <p>{section.text}</p>
+                <p>
+                  {section.kind === 'theory'
+                    ? 'A reliable interpretation should remain valid under camera rotation, slice inspection, and phase-view toggles.'
+                    : section.kind === 'deep'
+                      ? 'When using this relation, treat it as a formal constraint that must match both plotted trends and observed node topology.'
+                      : 'Use this advanced extension to strengthen cross-check quality between formal equations and rendered structure.'}
+                </p>
+                <p>
+                  For deeper mastery, convert the section claim into a short prediction sentence before looking at the graph or figure,
+                  then verify whether observed behavior supports that prediction. Repeating this predict-and-verify cycle across sections
+                  builds durable intuition and keeps your reasoning aligned with quantitative constraints.
+                </p>
+                {section.equation && <ExpandableFormula className="compact module1-formula-card" math={section.equation} />}
+              </>
+            )}
+          </AnimatedSection>
+        );
+      })}
+
+      {Array.isArray(topic.equations) && topic.equations.length > 0 && (
+        <AnimatedSection className="info-section module1-section">
+          <ModuleOneSectionHeading title={`${equationSectionNumber}) Equation Toolbox`} />
+          <p>
+            These equations are the core reference set for this module. Revisit them whenever a visual intuition and a formal prediction appear to disagree.
+          </p>
+          <div className="module1-equation-stack">
+            {topic.equations.map((equation) => (
+              <div className="module1-formula-card" key={equation.title}>
+                <h3>{equation.title}</h3>
+                <ExpandableFormula className="compact" math={equation.math} />
+                <p>{equation.description}</p>
+              </div>
+            ))}
+          </div>
+        </AnimatedSection>
+      )}
+
+      {Array.isArray(topic.chartData) && topic.chartData.length > 0 && (
+        <AnimatedSection className="info-section module1-section">
+          <ModuleOneSectionHeading title={`${primaryChartSectionNumber}) ${topic.chartTitle}`} />
+          <ModuleLongFormChartPanel title={topic.chartTitle} subtitle={topic.chartSubtitle} data={topic.chartData} lines={topic.chartLines} />
+        </AnimatedSection>
+      )}
+
+      {Array.isArray(topic.secondaryCharts) && topic.secondaryCharts.map((chart, index) => (
+        <AnimatedSection className="info-section module1-section" key={chart.title}>
+          <ModuleOneSectionHeading title={`${secondaryChartStart + index}) ${chart.title}`} />
+          <ModuleLongFormChartPanel title={chart.title} subtitle={chart.subtitle} data={chart.data} lines={chart.lines} />
+        </AnimatedSection>
+      ))}
+
+      {topic.table && (
+        <AnimatedSection className="info-section module1-section">
+          <ModuleOneSectionHeading title={`${tableSectionNumber}) Structured Reference Table`} />
+          <p>
+            Use this table as a compact verification grid for solved problems, tutorials, and classroom explanations.
+          </p>
+          <DataTable columns={topic.table.columns} rows={topic.table.rows} compact />
+        </AnimatedSection>
+      )}
+
+      <AnimatedSection className="info-section module1-section">
+        <ModuleOneSectionHeading title={`${closingSectionNumber}) Accuracy Checklist`} />
+        <ul className="module1-bullet-list">
+          <li>Confirm the node budget matches n and l before interpreting shape.</li>
+          <li>Use phase and slice views to verify hidden boundaries, not only surface density.</li>
+          <li>Cross-check at least one plotted trend against one equation from the toolbox.</li>
+          <li>Treat image references as contextual aids; always privilege the equations for final interpretation.</li>
+        </ul>
+      </AnimatedSection>
+    </>
+  );
+};
+
 const LearnTopicPage = ({ topic, onNavigate }) => {
-  const xAxisKey = topic.chartData?.length > 0 ? Object.keys(topic.chartData[0])[0] : 'x';
   const topicIndex = learnTopics.findIndex((item) => item.id === topic.id);
   const previousTopic = topicIndex > 0 ? learnMenuLinks[topicIndex - 1] : null;
   const nextTopic = topicIndex >= 0 && topicIndex < learnMenuLinks.length - 1 ? learnMenuLinks[topicIndex + 1] : null;
+
+  const moduleNavigationSection = (
+    <InfoSection title="Module Navigation" subtitle="Go to the previous or next learning module.">
+      <div className="learn-module-footer-nav">
+        {previousTopic && (
+          <button type="button" className="learn-module-nav-btn is-prev" onClick={() => onNavigate(previousTopic.id)}>
+            <span className="learn-module-nav-arrow" aria-hidden="true">&larr;</span>
+            <span className="learn-module-nav-copy">
+              <span className="learn-module-nav-kicker">Previous Module</span>
+              <span className="learn-module-nav-title">{previousTopic.numberedShortLabel}</span>
+            </span>
+          </button>
+        )}
+        {nextTopic && (
+          <button type="button" className="learn-module-nav-btn is-next" onClick={() => onNavigate(nextTopic.id)}>
+            <span className="learn-module-nav-copy">
+              <span className="learn-module-nav-kicker">Next Module</span>
+              <span className="learn-module-nav-title">{nextTopic.numberedShortLabel}</span>
+            </span>
+            <span className="learn-module-nav-arrow" aria-hidden="true">&rarr;</span>
+          </button>
+        )}
+      </div>
+    </InfoSection>
+  );
+
+  if (topic.id === 'learn-quantum-theory') {
+    return (
+      <InfoPageLayout
+        eyebrow={topic.eyebrow}
+        title={topic.title}
+        message={topic.message}
+        heroClassName="hero-howto"
+        onNavigate={onNavigate}
+        showLearnSidebar={true}
+        activeLearnId={topic.id}
+        ctaLabel="Open Simulator"
+        ctaTarget="simulator"
+      >
+        <ModuleOneCoreTheoryContent />
+
+        {Array.isArray(topic.faqs) && topic.faqs.length > 0 && (
+          <InfoSection title="Module FAQs" subtitle="Quick answers for common questions in this module.">
+            <div className="faq-list">
+              {topic.faqs.map((faq) => (
+                <FAQAccordion key={faq.question} question={faq.question} answer={faq.answer} />
+              ))}
+            </div>
+          </InfoSection>
+        )}
+
+        {moduleNavigationSection}
+      </InfoPageLayout>
+    );
+  }
+
+  if (topic.id === 'learn-quantum-numbers-detail') {
+    return (
+      <InfoPageLayout
+        eyebrow={topic.eyebrow}
+        title={topic.title}
+        message={topic.message}
+        heroClassName="hero-howto"
+        onNavigate={onNavigate}
+        showLearnSidebar={true}
+        activeLearnId={topic.id}
+        ctaLabel="Open Simulator"
+        ctaTarget="simulator"
+      >
+        <ModuleTwoQuantumNumbersContent />
+
+        {Array.isArray(topic.faqs) && topic.faqs.length > 0 && (
+          <InfoSection title="Module FAQs" subtitle="Quick answers for common questions in this module.">
+            <div className="faq-list">
+              {topic.faqs.map((faq) => (
+                <FAQAccordion key={faq.question} question={faq.question} answer={faq.answer} />
+              ))}
+            </div>
+          </InfoSection>
+        )}
+
+        {moduleNavigationSection}
+      </InfoPageLayout>
+    );
+  }
 
   return (
     <InfoPageLayout
@@ -1359,67 +3000,7 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
       ctaLabel="Open Simulator"
       ctaTarget="simulator"
     >
-      <InfoSection
-        title="Core Theory"
-        subtitle="Detailed conceptual notes for this module."
-      >
-        <div className="info-grid two-column">
-          {topic.theoryCards.map((card) => (
-            <article className="glass-card" key={card.title}>
-              <h3>{card.title}</h3>
-              <p>{card.text}</p>
-            </article>
-          ))}
-        </div>
-      </InfoSection>
-
-      <InfoSection
-        title="Equations Driving This Topic"
-        subtitle="Use these equations as the formal bridge between theory and what you see in 3D."
-      >
-        <div className="info-grid two-column">
-          {topic.equations.map((equation) => (
-            <article className="glass-card" key={equation.title}>
-              <h3>{equation.title}</h3>
-              <ExpandableFormula className="compact" math={equation.math} />
-              <p>{equation.description}</p>
-            </article>
-          ))}
-        </div>
-      </InfoSection>
-
-      <InfoSection title={topic.chartTitle} subtitle={topic.chartSubtitle}>
-        <article className="glass-card chart-card">
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={topic.chartData} margin={{ top: 10, right: 12, left: 2, bottom: 0 }}>
-              <CartesianGrid stroke="#2f4660" strokeDasharray="4 4" />
-              <XAxis dataKey={xAxisKey} stroke="#a7c9e8" />
-              <YAxis stroke="#a7c9e8" />
-              <Tooltip contentStyle={chartTooltipStyle} />
-              <Legend />
-              {topic.chartLines.map((line) => (
-                <Line key={line.dataKey} type="monotone" dataKey={line.dataKey} name={line.name} stroke={line.color} strokeWidth={2.2} dot={false} />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </article>
-      </InfoSection>
-
-      <InfoSection title="Structured Reference Table" subtitle="Fast lookup summary for teaching, revision, and solved workflows.">
-        <DataTable columns={topic.table.columns} rows={topic.table.rows} compact />
-      </InfoSection>
-
-      <InfoSection title="Image Slots" subtitle="Use these placeholders for portraits, orbital renders, and annotated diagrams.">
-        <div className="learn-image-grid">
-          {topic.imageSlots.map((slot) => (
-            <article className="glass-card learn-image-card" key={slot.title}>
-              <h3>{slot.title}</h3>
-              <div className="learn-image-placeholder">Image Placeholder</div>
-              <p>{slot.description}</p>
-            </article>
-          ))}
-        </div>
-      </InfoSection>
+      <ModuleThreeToSevenLongFormContent topic={topic} />
 
       {Array.isArray(topic.faqs) && topic.faqs.length > 0 && (
         <InfoSection title="Module FAQs" subtitle="Quick answers for common questions in this module.">
@@ -1431,28 +3012,7 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
         </InfoSection>
       )}
 
-      <InfoSection title="Module Navigation" subtitle="Go to the previous or next learning module.">
-        <div className="learn-module-footer-nav">
-          {previousTopic && (
-            <button type="button" className="learn-module-nav-btn is-prev" onClick={() => onNavigate(previousTopic.id)}>
-              <span className="learn-module-nav-arrow" aria-hidden="true">&larr;</span>
-              <span className="learn-module-nav-copy">
-                <span className="learn-module-nav-kicker">Previous Module</span>
-                <span className="learn-module-nav-title">{previousTopic.numberedShortLabel}</span>
-              </span>
-            </button>
-          )}
-          {nextTopic && (
-            <button type="button" className="learn-module-nav-btn is-next" onClick={() => onNavigate(nextTopic.id)}>
-              <span className="learn-module-nav-copy">
-                <span className="learn-module-nav-kicker">Next Module</span>
-                <span className="learn-module-nav-title">{nextTopic.numberedShortLabel}</span>
-              </span>
-              <span className="learn-module-nav-arrow" aria-hidden="true">&rarr;</span>
-            </button>
-          )}
-        </div>
-      </InfoSection>
+      {moduleNavigationSection}
     </InfoPageLayout>
   );
 };
@@ -1543,7 +3103,7 @@ const InfoPageLayout = ({
                     className={`learn-sidebar-link ${activeLearnId === item.id ? 'is-active' : ''}`.trim()}
                     onClick={() => onNavigate(item.id)}
                   >
-                    {item.label}
+                    {item.numberedShortLabel || item.shortLabel || item.label}
                   </button>
                 ))}
               </div>
@@ -2309,7 +3869,7 @@ const App = () => {
         <InfoPageLayout
           eyebrow="Information Page"
           title="About Quantum Orbital Explorer"
-          message="This dedicated URL page describes product purpose, architecture, and intended educational outcomes."
+          message="This page explains the platform mission, scientific design approach, and educational outcomes in a clear professional format."
           heroClassName="hero-howto"
           onNavigate={navigateToPage}
           ctaLabel="Open Learn Modules"
@@ -2320,27 +3880,77 @@ const App = () => {
               <article className="glass-card">
                 <h3>Mission</h3>
                 <p>
-                  Quantum Orbital Explorer is designed to bridge theory and intuition through high-fidelity visualization, structured learning pages, and guided controls.
+                  Quantum Orbital Explorer is built to close the gap between abstract quantum mechanics and practical interpretation.
+                  The platform combines mathematically grounded models, visual simulation, and structured learning content so users can move from equations to confident physical reasoning.
                 </p>
               </article>
               <article className="glass-card">
                 <h3>Outcome</h3>
                 <p>
-                  Users move from formulas and abstract rules to concrete orbital interpretations by directly observing geometry, nodes, and probability behavior.
+                  Users progress from symbolic formulas to concrete orbital interpretation by verifying geometry, nodes, phase regions, and radial trends in a single workflow.
+                  The intended result is not just visualization literacy, but transferable scientific judgment.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Scientific Standard</h3>
+                <p>
+                  Content is written to remain consistent with hydrogenic quantum mechanics, operator methods, and standard spectroscopy conventions.
+                  Visual explanations are intentionally tied back to equations to reduce conceptual drift.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Professional Use Cases</h3>
+                <p>
+                  The platform supports classroom delivery, independent study, concept revision, and pre-lab conceptual preparation.
+                  It is designed for educational clarity while preserving technical rigor.
                 </p>
               </article>
             </div>
           </InfoSection>
 
           <InfoSection title="System Overview" subtitle="Core components and responsibilities.">
-            <DataTable
-              columns={['Layer', 'Role', 'Key Output']}
-              rows={[
-                ['Frontend', 'Interactive controls and visual layout', '3D orbital cloud and learning pages'],
-                ['Backend', 'Radial/scatter calculations and caching', 'Binary point payloads and radial arrays'],
-                ['Learning Hub', 'Theory/equations/charts/tables', 'Curriculum-style explainers and references'],
-              ]}
-            />
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <h3>Interactive Frontend</h3>
+                <p>
+                  The frontend coordinates parameter control, 3D visualization, graph rendering, and learning navigation.
+                  Its primary role is to make high-dimensional quantum behavior inspectable without losing physical context.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Computational Backend</h3>
+                <p>
+                  The backend performs radial and scatter computations, serves cached orbital payloads, and returns numerically stable outputs for rendering.
+                  This architecture prioritizes both fidelity and responsive user interaction.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Learning Layer</h3>
+                <p>
+                  The learning layer integrates theory, equations, plotted behavior, and contextual images in one sequence.
+                  Its purpose is to turn simulator interaction into disciplined scientific interpretation.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Quality Workflow</h3>
+                <p>
+                  Content and visuals are organized so each claim can be checked against equations, graph trends, and node/phase behavior.
+                  This reduces ambiguity and supports reliable explanation quality.
+                </p>
+              </article>
+            </div>
+          </InfoSection>
+
+          <InfoSection title="Editorial Positioning" subtitle="How to interpret and use this platform professionally.">
+            <article className="glass-card">
+              <p>
+                Quantum Orbital Explorer is an educational and analytical tool, not a substitute for domain-specific computational chemistry packages used in research-grade many-electron modeling.
+                For hydrogenic intuition, conceptual training, and structured interpretation practice, it is intentionally designed to be explicit, transparent, and pedagogically rigorous.
+              </p>
+              <p>
+                The recommended usage pattern is simple: formulate a prediction, test it in the simulator, verify with equations and radial/phase evidence, then document conclusions in clear scientific language.
+              </p>
+            </article>
           </InfoSection>
         </InfoPageLayout>
       )}
@@ -2349,29 +3959,63 @@ const App = () => {
         <InfoPageLayout
           eyebrow="Information Page"
           title="Terms and Conditions"
-          message="This dedicated URL page outlines acceptable use, content scope, and operational limitations."
+          message="This page describes acceptable use, scientific scope, responsibility boundaries, and policy governance in plain professional language."
           heroClassName="hero-howto"
           onNavigate={navigateToPage}
           ctaLabel="Back to Welcome"
           ctaTarget="welcome"
         >
-          <InfoSection title="Usage Terms" subtitle="Summary terms for learning and simulation usage.">
-            <DataTable
-              columns={['Term Area', 'Condition', 'Practical Meaning']}
-              rows={[
-                ['Educational Use', 'Content is educational and exploratory', 'Use outputs as learning support'],
-                ['Scientific Review', 'Interpretations should be reviewed in context', 'Validate for formal assessments'],
-                ['Availability', 'Service may change as modules evolve', 'Layouts and content can be updated'],
-                ['External Media', 'Image placeholders may link to third-party assets', 'Ensure rights for uploaded media'],
-              ]}
-            />
+          <InfoSection title="Usage Terms" subtitle="Core terms for educational and simulation use.">
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <h3>Educational and Professional Scope</h3>
+                <p>
+                  This platform is intended for education, concept development, and guided scientific interpretation.
+                  It may support professional preparation workflows, but it is not a legal substitute for specialized research pipelines where full many-body methods are required.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>User Responsibility</h3>
+                <p>
+                  Users are responsible for validating critical conclusions before using them in graded, legal, or publication-level contexts.
+                  Outputs should be interpreted with domain judgment and, when needed, independent verification.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Service Evolution</h3>
+                <p>
+                  Features, layout, and educational modules may be updated as the platform evolves.
+                  Continued use after updates implies acceptance of the current published terms.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Media and External Assets</h3>
+                <p>
+                  Some visuals may reference externally hosted media.
+                  Where users upload or publish derivative content, responsibility for rights compliance remains with the user.
+                </p>
+              </article>
+            </div>
+          </InfoSection>
+
+          <InfoSection title="Professional Conduct" subtitle="Behavioral and operational expectations.">
+            <article className="glass-card">
+              <p>
+                Use of the service must remain lawful, non-abusive, and consistent with educational intent.
+                Attempts to disrupt platform stability, reverse-engineer protected infrastructure, or misuse contact channels are outside acceptable use and may result in restricted access.
+              </p>
+              <p>
+                The platform is provided in good faith for learning and interpretation support.
+                While significant care is taken in content quality, no absolute warranty is made for uninterrupted availability or fitness for any specific external workflow.
+              </p>
+            </article>
           </InfoSection>
 
           <InfoSection title="Policy Links" subtitle="Dedicated routes for legal and contact pages.">
             <div className="footer-link-list">
               {infoPageLinks.map((link) => (
                 <button key={link.id} className="footer-link-button" type="button" onClick={() => navigateToPage(link.id)}>
-                  {link.label}: {PAGE_ROUTE_MAP[link.id]}
+                  {link.label}
                 </button>
               ))}
             </div>
@@ -2383,28 +4027,63 @@ const App = () => {
         <InfoPageLayout
           eyebrow="Information Page"
           title="Privacy Policy"
-          message="This dedicated URL page explains what data is used for simulation and how operational logs are treated."
+          message="This page explains what information is processed, why it is processed, and how retention is managed in clear operational terms."
           heroClassName="hero-howto"
           onNavigate={navigateToPage}
           ctaLabel="Go to Contact"
           ctaTarget="contact"
         >
-          <InfoSection title="Data Handling" subtitle="Summary of data categories and usage.">
-            <DataTable
-              columns={['Data Type', 'Purpose', 'Retention']}
-              rows={[
-                ['Simulation parameters', 'Generate scatter and radial outputs', 'Short-lived request scope'],
-                ['Operational logs', 'Performance and reliability debugging', 'Limited retention window'],
-                ['Contact details', 'Respond to user inquiries', 'Retained only for communication workflow'],
-              ]}
-            />
+          <InfoSection title="Data Handling" subtitle="What information is processed and why.">
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <h3>Simulation Parameters</h3>
+                <p>
+                  Parameter inputs such as n, l, m, and Z are processed to generate requested orbital results.
+                  These inputs are used for computation and response delivery, not for behavioral profiling.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Operational Diagnostics</h3>
+                <p>
+                  Limited operational logs may be used to monitor latency, reliability, and error conditions.
+                  Log retention is managed with a minimal-window approach aligned with maintenance requirements.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Contact Information</h3>
+                <p>
+                  If you submit inquiries, provided contact details are used strictly for communication and support follow-up.
+                  They are not used for unrelated outreach workflows.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Purpose Limitation</h3>
+                <p>
+                  Processed information is handled for simulation service delivery, platform stability, and user-requested support.
+                  Use outside these purposes is not part of normal policy operation.
+                </p>
+              </article>
+            </div>
+          </InfoSection>
+
+          <InfoSection title="Retention and User Controls" subtitle="How long data is kept and what options users have.">
+            <article className="glass-card">
+              <p>
+                Simulation request context is generally short-lived and operationally scoped. Diagnostic information is retained only as needed for stability monitoring and service improvement.
+                Contact-request context is preserved only for active communication workflows.
+              </p>
+              <p>
+                Users can request clarification about policy interpretation through the contact route.
+                Where applicable, updates to policy wording are reflected on this page so current expectations remain explicit and auditable.
+              </p>
+            </article>
           </InfoSection>
 
           <InfoSection title="User Control" subtitle="Navigation links to supporting policy pages.">
             <div className="footer-link-list">
-              <button className="footer-link-button" type="button" onClick={() => navigateToPage('about')}>About URL: {PAGE_ROUTE_MAP.about}</button>
-              <button className="footer-link-button" type="button" onClick={() => navigateToPage('terms')}>Terms URL: {PAGE_ROUTE_MAP.terms}</button>
-              <button className="footer-link-button" type="button" onClick={() => navigateToPage('contact')}>Contact URL: {PAGE_ROUTE_MAP.contact}</button>
+              <button className="footer-link-button" type="button" onClick={() => navigateToPage('about')}>About</button>
+              <button className="footer-link-button" type="button" onClick={() => navigateToPage('terms')}>Terms and Conditions</button>
+              <button className="footer-link-button" type="button" onClick={() => navigateToPage('contact')}>Contact</button>
             </div>
           </InfoSection>
         </InfoPageLayout>
@@ -2414,27 +4093,64 @@ const App = () => {
         <InfoPageLayout
           eyebrow="Information Page"
           title="Contact"
-          message="This dedicated URL page centralizes support channels, response windows, and communication workflow."
+          message="Connect with the Quantum Orbital Explorer team for technical support, educational guidance, and platform policy clarification."
           heroClassName="hero-howto"
           onNavigate={navigateToPage}
           ctaLabel="Open Simulator"
           ctaTarget="simulator"
         >
-          <InfoSection title="Primary Contact Channels">
+          <InfoSection title="Primary Contact Channels" subtitle="Use the channel that best matches your request type.">
             <article className="glass-card">
               <ContactChips />
+              <p>
+                For the fastest response, include your objective (bug report, content clarification, classroom support, or policy question)
+                and, where relevant, the exact quantum settings you used in the simulator.
+              </p>
             </article>
           </InfoSection>
 
-          <InfoSection title="Support Workflow" subtitle="How requests are processed.">
-            <DataTable
-              columns={['Stage', 'What Happens', 'Expected Result']}
-              rows={[
-                ['Message received', 'Contact details and issue category are captured', 'Ticket context is prepared'],
-                ['Technical review', 'Simulation or content issue is investigated', 'Actionable response prepared'],
-                ['Follow-up', 'Resolution steps are shared with user', 'Issue closed or escalated'],
-              ]}
-            />
+          <InfoSection title="Response Standards" subtitle="What to expect after you reach out.">
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <h3>Initial Acknowledgement</h3>
+                <p>
+                  Messages are acknowledged in the order received. Most routine educational and product questions are acknowledged
+                  within one business day, with faster responses when request context is complete.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Technical Review</h3>
+                <p>
+                  If the request involves simulator behavior, the team reproduces the issue using provided parameters,
+                  validates expected physics behavior, and prepares clear resolution steps.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Resolution and Follow-up</h3>
+                <p>
+                  You receive a direct explanation, next actions, and escalation guidance if needed.
+                  Complex requests may be resolved in staged updates so progress remains transparent.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Teaching and Workshop Support</h3>
+                <p>
+                  Educators can request structured guidance for classroom delivery, including recommended module sequences,
+                  interpretation checkpoints, and simulator demonstration flow.
+                </p>
+              </article>
+            </div>
+          </InfoSection>
+
+          <InfoSection title="How To Get Fast, Accurate Support" subtitle="Include these details in your first message.">
+            <article className="glass-card">
+              <ul className="module1-bullet-list">
+                <li>Request type: technical issue, concept clarification, policy question, or classroom planning.</li>
+                <li>If technical: include n, l, m, Z values, and what behavior you expected versus observed.</li>
+                <li>If content-related: include module name, heading title, and the exact line of confusion.</li>
+                <li>If policy-related: reference the relevant About, Terms, or Privacy section for precision.</li>
+              </ul>
+            </article>
           </InfoSection>
         </InfoPageLayout>
       )}
