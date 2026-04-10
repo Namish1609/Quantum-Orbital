@@ -480,12 +480,11 @@ code {
 /* Ad Sidebars */
 .ad-sidebar {
   grid-row: 1;
-  position: sticky;
-  top: 0;
+  position: relative;
   width: var(--info-rail-width);
-  height: 100vh;
-  min-height: 100vh;
-  align-self: start;
+  height: auto;
+  min-height: 100%;
+  align-self: stretch;
   background-image:
     linear-gradient(160deg, rgba(6, 16, 30, 0.8) 0%, rgba(11, 28, 44, 0.88) 100%),
     url("../public/wp15211542.jpg");
