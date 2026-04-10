@@ -5,8 +5,6 @@ import * as THREE from 'three';
 import {
   LineChart,
   Line,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -379,56 +377,6 @@ const quantumSymbolCards = [
   },
 ];
 
-const classicalVsQuantumRows = [
-  {
-    topic: 'Electron Behavior',
-    classical: 'Point particle on deterministic orbit',
-    quantum: 'Wavefunction with probabilistic localization',
-  },
-  {
-    topic: 'Allowed States',
-    classical: 'Any radius and energy in principle',
-    quantum: 'Discrete energy eigenstates from boundary conditions',
-  },
-  {
-    topic: 'Visual Output',
-    classical: 'Single line trajectory',
-    quantum: '3D cloud with nodes, phase, and symmetry',
-  },
-  {
-    topic: 'Chemical Meaning',
-    classical: 'Poor predictor of bonding',
-    quantum: 'Explains bonding, geometry, spectra, and trends',
-  },
-];
-
-const orbitalFamilyRows = [
-  {
-    family: 's',
-    l: '0',
-    geometry: 'Spherical shell',
-    keyUse: 'Core shielding and sigma bonding',
-  },
-  {
-    family: 'p',
-    l: '1',
-    geometry: 'Two-lobed dumbbell',
-    keyUse: 'Directional covalent and pi interactions',
-  },
-  {
-    family: 'd',
-    l: '2',
-    geometry: 'Clover / torus hybrid forms',
-    keyUse: 'Transition metals, splitting, catalysis',
-  },
-  {
-    family: 'f',
-    l: '3',
-    geometry: 'Multi-lobed high-order surfaces',
-    keyUse: 'Lanthanides, actinides, magnetic behavior',
-  },
-];
-
 const simulatorControlRows = [
   {
     control: 'n slider',
@@ -457,15 +405,6 @@ const simulatorControlRows = [
   },
 ];
 
-const energyProfileData = [
-  { shell: 'n=1', radius: 14, density: 92 },
-  { shell: 'n=2', radius: 29, density: 74 },
-  { shell: 'n=3', radius: 42, density: 58 },
-  { shell: 'n=4', radius: 56, density: 44 },
-  { shell: 'n=5', radius: 71, density: 35 },
-  { shell: 'n=6', radius: 88, density: 27 },
-];
-
 const orbitalComplexityData = [
   { orbital: 's', nodes: 1, directionality: 2, chemistry: 7 },
   { orbital: 'p', nodes: 3, directionality: 6, chemistry: 8 },
@@ -490,11 +429,507 @@ const workflowChartData = [
 ];
 
 const quickLinks = [
-  { id: 'welcome', label: 'Welcome & Math' },
+  { id: 'welcome', label: 'Welcome' },
   { id: 'chemistry', label: 'Chemistry Concepts' },
   { id: 'howto', label: 'How To Use' },
+  { id: 'learn-quantum-theory', label: 'Learn' },
   { id: 'simulator', label: 'Simulator' },
 ];
+
+const learnTopics = [
+  {
+    id: 'learn-quantum-theory',
+    label: '1. Quantum Theory, Evolution, and Dual Nature',
+    shortLabel: 'Quantum Theory Foundations',
+    eyebrow: 'Learn Module 1',
+    title: 'What Is Quantum Theory? Evolution and Dual Nature',
+    message: 'Follow the transition from classical certainty to quantum probability through experiments, equations, and interpretation frameworks.',
+    theoryCards: [
+      {
+        title: 'Historical Evolution',
+        text: 'Quantum theory emerged when blackbody radiation, photoelectric effect, and atomic spectra resisted classical explanations. Planck introduced energy quanta, Einstein formalized light quanta, Bohr quantized atomic states, and modern wave mechanics unified these insights into predictive models.',
+      },
+      {
+        title: 'Wave-Particle Duality',
+        text: 'Matter and radiation behave with both wave-like and particle-like signatures. Electrons diffract like waves in a crystal lattice yet register as localized detection events, proving that the wavefunction is an amplitude map while measurement outcomes are discrete.',
+      },
+      {
+        title: 'Measurement and Uncertainty',
+        text: 'Quantum measurement changes the state description from distributed amplitudes to observed outcomes. The uncertainty relation is not an instrument flaw; it is a structural rule linking conjugate observables through Fourier-limited representations.',
+      },
+      {
+        title: 'Modern Interpretation Stack',
+        text: 'Current workflows combine state vectors, operators, expectation values, and numerical simulation. In this simulator, that abstract stack is translated into visible orbital density, phase coloration, and node boundaries.',
+      },
+    ],
+    equations: [
+      {
+        title: 'Planck-Einstein Relation',
+        math: 'E = h\\nu',
+        description: 'Energy is quantized by frequency. This relation is foundational for spectroscopy and motivates discrete atomic transitions.',
+      },
+      {
+        title: 'de Broglie Wavelength',
+        math: '\\lambda = \\frac{h}{p}',
+        description: 'Momentum determines wavelength. This equation explains electron diffraction and the wave basis of bound-state orbitals.',
+      },
+    ],
+    chartTitle: 'Concept Maturity Across Eras',
+    chartSubtitle: 'Trend view of theory precision and experiment confirmation over key milestones.',
+    chartData: [
+      { stage: '1900', precision: 18, validation: 14 },
+      { stage: '1913', precision: 31, validation: 26 },
+      { stage: '1926', precision: 63, validation: 57 },
+      { stage: '1950', precision: 78, validation: 74 },
+      { stage: 'Today', precision: 94, validation: 92 },
+    ],
+    chartLines: [
+      { dataKey: 'precision', name: 'Theory Precision', color: '#30c6ff' },
+      { dataKey: 'validation', name: 'Experimental Validation', color: '#ffd265' },
+    ],
+    table: {
+      columns: ['Concept', 'Classical Picture', 'Quantum Picture', 'Why It Matters'],
+      rows: [
+        ['Light', 'Continuous wave only', 'Photon and wave dual behavior', 'Explains photoelectric thresholds'],
+        ['Electron', 'Point mass trajectory', 'State amplitude with probabilistic detection', 'Enables orbital and bonding models'],
+        ['Energy', 'Continuous', 'Discrete eigenvalues in bound states', 'Explains line spectra'],
+        ['Prediction', 'Deterministic path', 'Probability amplitudes and operators', 'Matches observed measurement statistics'],
+      ],
+    },
+    imageSlots: [
+      { title: 'Werner Heisenberg', description: 'Place a portrait and short timeline annotation.' },
+      { title: 'Erwin Schrodinger', description: 'Place an image with notes on wave mechanics.' },
+      { title: 'Double-Slit Experiment Diagram', description: 'Insert interference pattern image and interpretation labels.' },
+    ],
+  },
+  {
+    id: 'learn-quantum-numbers-detail',
+    label: '2. Quantum Numbers in Super Detail',
+    shortLabel: 'Quantum Numbers Deep Dive',
+    eyebrow: 'Learn Module 2',
+    title: 'Explaining Quantum Numbers in Super Detail',
+    message: 'Map each quantum number to measurable consequences in shell size, symmetry, degeneracy, and chemistry.',
+    theoryCards: [
+      {
+        title: 'Principal Quantum Number (n)',
+        text: 'n controls orbital scale, energy ladder position, and radial node budget. For hydrogenic systems, larger n expands average radius and compresses adjacent energy gaps as states approach ionization limit.',
+      },
+      {
+        title: 'Azimuthal Quantum Number (l)',
+        text: 'l determines orbital family (s, p, d, f), angular momentum magnitude, and the count of angular nodes. It governs shape complexity and directional chemistry behavior in molecular overlap.',
+      },
+      {
+        title: 'Magnetic Quantum Number (m)',
+        text: 'm indexes orientation states for fixed n and l. In external fields, m-degenerate states split (Zeeman effect), which directly connects orbital orientation to spectroscopy.',
+      },
+      {
+        title: 'Nuclear Charge (Z)',
+        text: 'Z controls Coulomb attraction. Larger Z contracts wavefunctions, raises binding strength, and modifies radial probability concentration for identical quantum numbers.',
+      },
+    ],
+    equations: [
+      {
+        title: 'Hydrogenic Energy Level',
+        math: 'E_n = -\\frac{13.6 Z^2}{n^2}\\,\\text{eV}',
+        description: 'Energy depends strongly on Z and n; this relation is the baseline for shell ordering in one-electron atoms.',
+      },
+      {
+        title: 'Angular Momentum Magnitude',
+        math: '|\\mathbf{L}| = \\hbar\\sqrt{l(l+1)}',
+        description: 'Quantized angular momentum emerges directly from boundary conditions of spherical harmonics.',
+      },
+    ],
+    chartTitle: 'Parameter Sensitivity by Quantum Number',
+    chartSubtitle: 'Relative impact of each parameter on size, directionality, and energy spacing.',
+    chartData: [
+      { parameter: 'n', size: 96, direction: 48, energy: 92 },
+      { parameter: 'l', size: 42, direction: 95, energy: 54 },
+      { parameter: 'm', size: 18, direction: 82, energy: 28 },
+      { parameter: 'Z', size: 88, direction: 36, energy: 97 },
+    ],
+    chartLines: [
+      { dataKey: 'size', name: 'Size Impact', color: '#39dcb1' },
+      { dataKey: 'direction', name: 'Directionality Impact', color: '#30c6ff' },
+      { dataKey: 'energy', name: 'Energy Impact', color: '#ffd265' },
+    ],
+    table: {
+      columns: ['Parameter', 'Allowed Values', 'Primary Effect', 'Visualization Cue'],
+      rows: [
+        ['n', '1, 2, 3, ...', 'Shell size and baseline energy', 'Cloud radius and radial layering'],
+        ['l', '0 to n-1', 'Shape family and angular nodes', 's/p/d/f morphology changes'],
+        ['m', '-l to +l', 'Orientation state', 'Rotation and lobe alignment'],
+        ['Z', '>= 1', 'Coulomb contraction and binding', 'Density shifts toward nucleus'],
+      ],
+    },
+    imageSlots: [
+      { title: 'Quantum Number Pyramid Graphic', description: 'Insert hierarchy image showing n, l, m dependencies.' },
+      { title: 'Orbital Orientation Set', description: 'Add image panel for px, py, pz orientation examples.' },
+      { title: 'Spectral Splitting Visual', description: 'Insert Zeeman/Stark splitting reference graphic.' },
+    ],
+  },
+  {
+    id: 'learn-orbital-geometry',
+    label: '3. Geometry of Orbitals in Detail',
+    shortLabel: 'Orbital Geometry',
+    eyebrow: 'Learn Module 3',
+    title: 'Geometry of Orbitals in Detail',
+    message: 'Understand how spherical harmonics generate directional lobes, nodal planes, and family-specific 3D geometry.',
+    theoryCards: [
+      {
+        title: 'Symmetry Families',
+        text: 's orbitals preserve full rotational symmetry, while p, d, and f families break symmetry into directional lobes. Angular nodal structures partition space into alternating phase regions.',
+      },
+      {
+        title: 'Orientation and Degeneracy',
+        text: 'For each l value, multiple m states correspond to differently oriented but energetically degenerate solutions in isotropic Coulomb fields. Distortions and fields lift this degeneracy.',
+      },
+      {
+        title: 'Real vs Complex Orbitals',
+        text: 'Chemistry often uses real combinations of spherical harmonics to visualize lobes aligned with Cartesian axes. Physics workflows may retain complex forms for angular momentum operators.',
+      },
+      {
+        title: 'Geometry to Bonding',
+        text: 'Orbital geometry predicts overlap direction and bond strength. Sigma overlap is head-on, while pi overlap is lateral and strongly sensitive to lobe orientation and phase.',
+      },
+    ],
+    equations: [
+      {
+        title: 'Wavefunction Separation',
+        math: '\\psi_{n,l,m}(r,\\theta,\\phi)=R_{n,l}(r)Y_{l,m}(\\theta,\\phi)',
+        description: 'All orbital geometry is encoded in angular and radial factors multiplied together.',
+      },
+      {
+        title: 'Spherical Harmonic Core Form',
+        math: 'Y_{l,m}(\\theta,\\phi)=N_{l,m}P_l^m(\\cos\\theta)e^{im\\phi}',
+        description: 'Associated Legendre structure defines nodal planes/cones and azimuthal behavior.',
+      },
+    ],
+    chartTitle: 'Shape Complexity vs Orbital Family',
+    chartSubtitle: 'Comparing angular node growth and directional anisotropy.',
+    chartData: orbitalComplexityData,
+    chartLines: [
+      { dataKey: 'nodes', name: 'Node Count Index', color: '#30c6ff' },
+      { dataKey: 'directionality', name: 'Directionality Index', color: '#ff8a5b' },
+      { dataKey: 'chemistry', name: 'Chemistry Relevance', color: '#ffd265' },
+    ],
+    table: {
+      columns: ['Family', 'l Value', 'Typical Node Character', 'Chemistry Implication'],
+      rows: [
+        ['s', '0', 'No angular node', 'Isotropic overlap and shielding'],
+        ['p', '1', 'Single nodal plane', 'Directional sigma and pi bonding'],
+        ['d', '2', 'Two angular nodes', 'Transition-metal field splitting'],
+        ['f', '3', 'Three angular nodes', 'Strong anisotropy and complex magnetism'],
+      ],
+    },
+    imageSlots: [
+      { title: 's, p, d, f Shape Atlas', description: 'Insert multi-panel orbital geometry image.' },
+      { title: 'Cartesian Orientation Labels', description: 'Place annotated px/py/pz and d-orbital orientation visuals.' },
+      { title: 'Crystal Field Splitting Diagram', description: 'Insert octahedral/tetrahedral splitting graphics.' },
+    ],
+  },
+  {
+    id: 'learn-nodes-antinodes',
+    label: '4. Nodes and Antinodes',
+    shortLabel: 'Nodes and Antinodes',
+    eyebrow: 'Learn Module 4',
+    title: 'Explaining Nodes and Antinodes',
+    message: 'Translate interference mathematics into orbital zero-surfaces (nodes) and high-amplitude regions (antinodes).',
+    theoryCards: [
+      {
+        title: 'Node Definition',
+        text: 'A node is a locus where the wavefunction amplitude is exactly zero. It appears as a surface in 3D orbitals and separates regions of opposite phase.',
+      },
+      {
+        title: 'Antinode Definition',
+        text: 'Antinodes are regions of high amplitude magnitude and therefore high probability density after squaring. Orbital lobes correspond to antinode-rich regions.',
+      },
+      {
+        title: 'Interference Logic',
+        text: 'When amplitudes overlap with opposite sign, destructive interference creates nodal boundaries. Matching sign creates constructive reinforcement and antinode growth.',
+      },
+      {
+        title: 'Practical Interpretation',
+        text: 'In chemistry, nodal surfaces reduce overlap and can weaken bonding channels, while antinode alignment increases electron sharing in bonding orbitals.',
+      },
+    ],
+    equations: [
+      {
+        title: 'Node Condition',
+        math: '\\psi(r,\\theta,\\phi)=0',
+        description: 'A node is strictly an amplitude zero condition before squaring.',
+      },
+      {
+        title: 'Probability Density',
+        math: '\\rho(r,\\theta,\\phi)=|\\psi(r,\\theta,\\phi)|^2',
+        description: 'Antinodes become high-density volumes in probability maps.',
+      },
+    ],
+    chartTitle: 'Interference Balance',
+    chartSubtitle: 'A conceptual chart showing where constructive and destructive regimes dominate.',
+    chartData: phaseInsightData,
+    chartLines: [
+      { dataKey: 'positive', name: 'Constructive Regime', color: '#ff6b6b' },
+      { dataKey: 'negative', name: 'Destructive Regime', color: '#6beaff' },
+    ],
+    table: {
+      columns: ['Region Type', 'Wavefunction Sign Behavior', 'Density Signature', 'Chemical Consequence'],
+      rows: [
+        ['Node', 'Sign changes across boundary', 'Near-zero density', 'Weak overlap pathway'],
+        ['Antinode', 'Stable sign region', 'High density lobe', 'Strong overlap pathway'],
+        ['Constructive overlap', 'Same sign combination', 'Density increase', 'Bond stabilization tendency'],
+        ['Destructive overlap', 'Opposite sign combination', 'Cancellation zone', 'Antibonding tendency'],
+      ],
+    },
+    imageSlots: [
+      { title: 'Nodal Plane Cutaway', description: 'Insert a sliced orbital showing zero-density boundaries.' },
+      { title: 'Phase Color Overlay', description: 'Add red/blue lobe map illustrating sign inversion.' },
+      { title: 'Bonding vs Antibonding Pair', description: 'Insert two-orbital overlap comparison image.' },
+    ],
+  },
+  {
+    id: 'learn-radial-angular-nodes',
+    label: '5. Radial and Angular Nodes',
+    shortLabel: 'Radial and Angular Nodes',
+    eyebrow: 'Learn Module 5',
+    title: 'Radial and Angular Nodes: Full Breakdown',
+    message: 'Separate where nodal shells come from radial terms and where nodal planes/cones come from angular terms.',
+    theoryCards: [
+      {
+        title: 'Radial Nodes',
+        text: 'Radial nodes are spherical shells where the radial component crosses zero. Their count is n-l-1, and they control ring-like layering in radial distributions.',
+      },
+      {
+        title: 'Angular Nodes',
+        text: 'Angular nodes arise from spherical harmonic structure and equal l in count. They appear as planes or cones slicing through orbital volume.',
+      },
+      {
+        title: 'Combined Node Budget',
+        text: 'Total nodes always equal n-1 for hydrogenic states. The partition between radial and angular nodes determines whether orbitals look shell-heavy or direction-heavy.',
+      },
+      {
+        title: 'Visualization Strategy',
+        text: 'Use slice views to inspect radial shell boundaries, then rotate to identify angular nodal planes. Both views are needed for complete state interpretation.',
+      },
+    ],
+    equations: [
+      {
+        title: 'Radial Node Count',
+        math: 'N_r = n-l-1',
+        description: 'The radial component contributes this many spherical node shells.',
+      },
+      {
+        title: 'Angular Node Count',
+        math: 'N_a = l',
+        description: 'Angular structure contributes planes/cones defined by spherical harmonics.',
+      },
+    ],
+    chartTitle: 'Node Partition by Orbital Family',
+    chartSubtitle: 'Comparison of radial and angular node contributions for selected states.',
+    chartData: [
+      { state: '2s', radial: 1, angular: 0 },
+      { state: '2p', radial: 0, angular: 1 },
+      { state: '3p', radial: 1, angular: 1 },
+      { state: '3d', radial: 0, angular: 2 },
+      { state: '4f', radial: 0, angular: 3 },
+    ],
+    chartLines: [
+      { dataKey: 'radial', name: 'Radial Nodes', color: '#57d3ff' },
+      { dataKey: 'angular', name: 'Angular Nodes', color: '#ff8a5b' },
+    ],
+    table: {
+      columns: ['State', 'n', 'l', 'Radial Nodes', 'Angular Nodes'],
+      rows: [
+        ['2s', '2', '0', '1', '0'],
+        ['2p', '2', '1', '0', '1'],
+        ['3p', '3', '1', '1', '1'],
+        ['3d', '3', '2', '0', '2'],
+      ],
+    },
+    imageSlots: [
+      { title: 'Radial Shell Cross-Section', description: 'Insert shell cutaway with node ring annotations.' },
+      { title: 'Angular Node Planes', description: 'Insert p/d/f nodal plane and cone overlays.' },
+      { title: 'Combined Node Diagram', description: 'Insert hybrid view showing both radial and angular nodes.' },
+    ],
+  },
+  {
+    id: 'learn-probability-functions',
+    label: '6. Probability Distribution Functions',
+    shortLabel: 'Probability Functions',
+    eyebrow: 'Learn Module 6',
+    title: 'Probability Distribution Functions: All Core Types',
+    message: 'Understand point density, radial distribution, angular weighting, cumulative probability, and expectation-value interpretations.',
+    theoryCards: [
+      {
+        title: 'Point Probability Density',
+        text: 'The local probability density is |psi|^2. In 3D visualization, denser point clouds correspond to higher local measurement likelihood.',
+      },
+      {
+        title: 'Radial Distribution Function',
+        text: 'Radial probability includes Jacobian weighting: P(r)=4pi r^2|R(r)|^2. This creates peaks away from the origin even when local density is high near small r.',
+      },
+      {
+        title: 'Angular Distribution',
+        text: 'Angular probability comes from |Y_lm(theta,phi)|^2 and encodes direction preference. It determines where lobes and nodal planes appear.',
+      },
+      {
+        title: 'Cumulative Probability',
+        text: 'Integrated probability up to radius r indicates how likely the electron is within a finite sphere, useful for comparing contracted vs diffuse states.',
+      },
+    ],
+    equations: [
+      {
+        title: 'Local Density',
+        math: '\\rho(r,\\theta,\\phi)=|\\psi_{n,l,m}(r,\\theta,\\phi)|^2',
+        description: 'Core quantity behind all scatter rendering intensity decisions.',
+      },
+      {
+        title: 'Radial Distribution',
+        math: 'P(r)=4\\pi r^2|R_{n,l}(r)|^2',
+        description: 'Used to interpret where probability mass is concentrated over radius.',
+      },
+    ],
+    chartTitle: 'Distribution Function Comparison',
+    chartSubtitle: 'Conceptual magnitude comparison of local, radial, angular, and cumulative measures.',
+    chartData: [
+      { radius: 'r1', local: 84, radial: 36, angular: 66, cumulative: 14 },
+      { radius: 'r2', local: 70, radial: 62, angular: 74, cumulative: 32 },
+      { radius: 'r3', local: 49, radial: 81, angular: 68, cumulative: 56 },
+      { radius: 'r4', local: 31, radial: 59, angular: 48, cumulative: 78 },
+      { radius: 'r5', local: 17, radial: 28, angular: 27, cumulative: 92 },
+    ],
+    chartLines: [
+      { dataKey: 'local', name: 'Local Density', color: '#6beaff' },
+      { dataKey: 'radial', name: 'Radial Distribution', color: '#ffd265' },
+      { dataKey: 'angular', name: 'Angular Weighting', color: '#39dcb1' },
+      { dataKey: 'cumulative', name: 'Cumulative Probability', color: '#ff8a5b' },
+    ],
+    table: {
+      columns: ['Function Type', 'Expression Core', 'Physical Meaning', 'Best Use Case'],
+      rows: [
+        ['Local density', '|psi|^2', 'Pointwise likelihood', '3D cloud coloring'],
+        ['Radial distribution', '4pi r^2|R|^2', 'Probability by shell radius', 'Peak radius interpretation'],
+        ['Angular distribution', '|Ylm|^2', 'Directional preference', 'Lobe orientation studies'],
+        ['Cumulative distribution', 'Integral from 0 to r', 'Contained probability mass', 'Contraction comparisons'],
+      ],
+    },
+    imageSlots: [
+      { title: 'Radial Curve Panel', description: 'Insert radial distribution graph image with labeled peaks.' },
+      { title: 'Angular Heatmap', description: 'Add spherical angular probability map image.' },
+      { title: 'Cumulative Probability Plot', description: 'Insert cumulative curve with threshold markers.' },
+    ],
+  },
+  {
+    id: 'learn-solved-examples',
+    label: '7. Solved Examples',
+    shortLabel: 'Solved Examples',
+    eyebrow: 'Learn Module 7',
+    title: 'Solved Examples: From Inputs to Interpretation',
+    message: 'Walk through complete solved workflows that connect chosen quantum numbers to geometry, nodes, and probability outcomes.',
+    theoryCards: [
+      {
+        title: 'Example 1: 2p (n=2, l=1, m=0, Z=1)',
+        text: 'Predict one angular node, zero radial nodes, and dumbbell geometry oriented by m basis. Validate by rotating and slicing in the simulator.',
+      },
+      {
+        title: 'Example 2: 3s (n=3, l=0, m=0, Z=1)',
+        text: 'Predict spherical symmetry and two radial nodes. Confirm by radial graph peaks and shell boundary transitions in slice mode.',
+      },
+      {
+        title: 'Example 3: 4d (n=4, l=2, m=1, Z=2)',
+        text: 'Predict two angular nodes, one radial node, and contracted density versus hydrogen due to larger Z.',
+      },
+      {
+        title: 'Interpretation Checklist',
+        text: 'Always compute node counts first, then predict shape family, then verify with phase display and radial chart. This sequence avoids interpretation errors.',
+      },
+    ],
+    equations: [
+      {
+        title: 'Total Node Rule',
+        math: 'N_{\\text{total}} = n-1 = (n-l-1)+l',
+        description: 'Use this to cross-check consistency in every solved example.',
+      },
+      {
+        title: 'Expectation Radius (Hydrogenic Trend)',
+        math: '\\langle r \\rangle \\propto \\frac{n^2}{Z}',
+        description: 'Gives quick intuition for cloud size scaling before simulation.',
+      },
+    ],
+    chartTitle: 'Solved Workflow Confidence Curve',
+    chartSubtitle: 'Conceptual confidence gain while progressing through a worked problem.',
+    chartData: workflowChartData,
+    chartLines: [
+      { dataKey: 'confidence', name: 'Interpretation Confidence', color: '#30c6ff' },
+    ],
+    table: {
+      columns: ['Example', 'Input Set', 'Predicted Nodes', 'Predicted Geometry', 'Validation Step'],
+      rows: [
+        ['2p', 'n=2, l=1, m=0, Z=1', '0 radial, 1 angular', 'Two-lobed', 'Rotate + phase toggle'],
+        ['3s', 'n=3, l=0, m=0, Z=1', '2 radial, 0 angular', 'Spherical shells', 'Slice + radial chart'],
+        ['4d', 'n=4, l=2, m=1, Z=2', '1 radial, 2 angular', 'Clover-like', 'Compare to Z=1 contraction'],
+        ['5f', 'n=5, l=3, m=2, Z=3', '1 radial, 3 angular', 'Complex multi-lobe', 'Node checklist + orientation'],
+      ],
+    },
+    imageSlots: [
+      { title: 'Solved Example Worksheet', description: 'Insert worksheet screenshot with parameter-to-result notes.' },
+      { title: 'Orbital Snapshot Gallery', description: 'Add side-by-side images for solved examples.' },
+      { title: 'Instructor Annotation Layer', description: 'Insert marked-up image showing node callouts.' },
+    ],
+  },
+];
+
+const learnMenuLinks = [
+  ...learnTopics.map((topic) => ({ id: topic.id, label: topic.label, shortLabel: topic.shortLabel })),
+];
+
+const infoPageLinks = [
+  { id: 'about', label: 'About' },
+  { id: 'terms', label: 'Terms and Conditions' },
+  { id: 'privacy', label: 'Privacy Policy' },
+  { id: 'contact', label: 'Contact' },
+];
+
+const PAGE_ROUTE_MAP = {
+  welcome: '#/welcome',
+  chemistry: '#/chemistry',
+  howto: '#/how-to-use',
+  'learn-quantum-theory': '#/learn/quantum-theory',
+  'learn-quantum-numbers-detail': '#/learn/quantum-numbers-detail',
+  'learn-orbital-geometry': '#/learn/orbital-geometry',
+  'learn-nodes-antinodes': '#/learn/nodes-and-antinodes',
+  'learn-radial-angular-nodes': '#/learn/radial-angular-nodes',
+  'learn-probability-functions': '#/learn/probability-functions',
+  'learn-solved-examples': '#/learn/solved-examples',
+  simulator: '#/simulator',
+  about: '#/about',
+  terms: '#/terms-and-conditions',
+  privacy: '#/privacy-policy',
+  contact: '#/contact',
+};
+
+const HASH_PAGE_MAP = Object.entries(PAGE_ROUTE_MAP).reduce((acc, [page, route]) => {
+  acc[route] = page;
+  return acc;
+}, {});
+
+const learnTopicMap = learnTopics.reduce((acc, topic) => {
+  acc[topic.id] = topic;
+  return acc;
+}, {});
+
+const normalizeHashRoute = (rawHash) => {
+  if (!rawHash) return '';
+  const hash = rawHash.startsWith('#') ? rawHash : `#${rawHash}`;
+  return hash.endsWith('/') ? hash.slice(0, -1) : hash;
+};
+
+const getPageFromHash = (rawHash) => {
+  const normalized = normalizeHashRoute(rawHash);
+  if (normalized === '#/learn') return 'learn-quantum-theory';
+  return HASH_PAGE_MAP[normalized] || null;
+};
+
+const isLearnPage = (pageId) => typeof pageId === 'string' && pageId.startsWith('learn-');
 
 const chartTooltipStyle = {
   backgroundColor: '#0f1722',
@@ -591,70 +1026,63 @@ const ExpandableFormula = ({ math, className = '' }) => {
   );
 };
 
-const SymbolCardVertical = () => (
-  <div className="symbol-vertical-list">
-    <article className="glass-card flex-row-card">
-      <div className="orbital-symbol symbol-n">
-        <div className="circle-ring r1"></div>
-        <div className="circle-ring r2"></div>
-        <div className="circle-ring r3"></div>
-      </div>
-      <div className="orbital-info">
-        <h3>Principal Quantum Number (<InlineMath math={'n'} /> = 1, 2, 3...)</h3>
-        <p><strong>Energy & Distance.</strong> Determines the overall size and energy of the orbital. As <InlineMath math={'n'} /> increases, the electron spends more time further from the nucleus, meaning higher energy and less stability. Also defines the total number of nodes (<InlineMath math={'n - 1'} />).</p>
-      </div>
-    </article>
+const QuantumSymbolMark = ({ symbol }) => {
+  const normalizedSymbol = String(symbol).toLowerCase();
 
-    <article className="glass-card flex-row-card">
-      <div className="orbital-symbol symbol-l">
-        <svg width="40" height="40" viewBox="0 0 120 70" style={{ transform: 'scale(1.2)' }}>
-          <path d="M 10 60 A 50 50 0 0 1 110 60 Z" fill="none" stroke="currentColor" strokeWidth="3"/>
-          <line x1="5" y1="60" x2="115" y2="60" stroke="currentColor" strokeWidth="3"/>
-          <line x1="60" y1="60" x2="60" y2="5" stroke="currentColor" strokeWidth="3" strokeDasharray="4 4"/>
-          <line x1="60" y1="60" x2="10" y2="10" stroke="#ff3b6a" strokeWidth="3"/>
-          <path d="M 40 40 Q 50 30 60 40" fill="none" stroke="#fff" strokeWidth="2"/>
-          <circle cx="60" cy="60" r="4" fill="#fff"/>
-        </svg>
+  if (normalizedSymbol === 'n') {
+    return (
+      <div className="symbol-mark symbol-mark-n" aria-hidden="true">
+        <span className="circle-ring r1"></span>
+        <span className="circle-ring r2"></span>
+        <span className="circle-ring r3"></span>
+        <span className="nucleus-core"></span>
+        <span className="symbol-letter">n</span>
       </div>
-      <div className="orbital-info">
-        <h3>Angular Momentum Number (<InlineMath math={'l'} /> = 0, ..., <InlineMath math={'n-1'} />)</h3>
-        <p><strong>Shape & Subshell.</strong> Dictates the geometry of the probability cloud (s, p, d, f) and tells us the exact number of angular nodes. <InlineMath math={'l=0'} /> is spherical, <InlineMath math={'l=1'} /> has lobes, <InlineMath math={'l=2'} /> has clover shapes, etc. Fundamental to chemical bonding directionality.</p>
-      </div>
-    </article>
+    );
+  }
 
-    <article className="glass-card flex-row-card">
-      <div className="orbital-symbol symbol-m">
-        <div className="compass">
-          <div className="needle top"></div>
-          <div className="needle bottom"></div>
-        </div>
+  if (normalizedSymbol === 'l') {
+    return (
+      <div className="symbol-mark symbol-mark-l" aria-hidden="true">
+        <span className="theta-mark">{"\u03B8"}</span>
+        <span className="symbol-letter">l</span>
       </div>
-      <div className="orbital-info">
-        <h3>Magnetic Quantum Number (<InlineMath math={'m_l'} /> = <InlineMath math={'-l'} /> to <InlineMath math={'+l'} />)</h3>
-        <p><strong>Spatial Orientation.</strong> Determines exactly how the orbital aligns in 3D space along the x, y, and z axes. Gives rise to the degenerate orbital sets, e.g. the 3 distinct <InlineMath math={'p'} /> orbitals or 5 distinct <InlineMath math={'d'} /> orbitals interacting with a magnetic field.</p>
-      </div>
-    </article>
+    );
+  }
 
-    <article className="glass-card flex-row-card">
-      <div className="orbital-symbol symbol-z">
-        <div className="nucleus-dot"></div>
-        <div className="electron-orbit o1"></div>
-        <div className="electron-orbit o2"></div>
-        <div className="electron-orbit o3"></div>
+  if (normalizedSymbol === 'm') {
+    return (
+      <div className="symbol-mark symbol-mark-m" aria-hidden="true">
+        <span className="compass">
+          <span className="needle top"></span>
+          <span className="needle bottom"></span>
+        </span>
+        <span className="symbol-letter">m</span>
       </div>
-      <div className="orbital-info">
-        <h3>Atomic Number (<InlineMath math={'Z'} />)</h3>
-        <p><strong>Nuclear Charge.</strong> Represents the number of protons in the nucleus. A higher <InlineMath math={'Z'} /> increases electrostatic pull, dramatically contracting the orbital size and lowering its energy. This parameter proves why heavier elements have incredibly compact deeper inner shells.</p>
+    );
+  }
+
+  if (normalizedSymbol === 'z') {
+    return (
+      <div className="symbol-mark symbol-mark-z" aria-hidden="true">
+        <span className="charge-ring cr1"></span>
+        <span className="charge-ring cr2"></span>
+        <span className="charge-ring cr3"></span>
+        <span className="charge-core"></span>
+        <span className="charge-sign">+</span>
+        <span className="symbol-letter">z</span>
       </div>
-    </article>
-  </div>
-);
+    );
+  }
+
+  return <div className="symbol-mark">{symbol}</div>;
+};
 
 const SymbolCardGrid = () => (
   <div className="symbol-grid">
     {quantumSymbolCards.map((card) => (
       <article className="symbol-card" key={card.symbol}>
-        <div className="symbol-mark">{card.symbol}</div>
+        <QuantumSymbolMark symbol={card.symbol} />
         <h3>{card.title}</h3>
         <p className="symbol-range">{card.range}</p>
         <p>{card.insight}</p>
@@ -663,9 +1091,9 @@ const SymbolCardGrid = () => (
   </div>
 );
 
-const DataTable = ({ columns, rows, caption }) => (
-  <div className="table-wrap">
-    <table className="quantum-table">
+const DataTable = ({ columns, rows, caption, compact = false }) => (
+  <div className={`table-wrap ${compact ? 'is-compact' : ''}`.trim()}>
+    <table className={`quantum-table ${compact ? 'is-compact' : ''}`.trim()}>
       {caption && <caption>{caption}</caption>}
       <thead>
         <tr>
@@ -687,15 +1115,127 @@ const DataTable = ({ columns, rows, caption }) => (
   </div>
 );
 
+const ContactChips = () => (
+  <>
+    <div className="contact-inline">
+      <span className="contact-chip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.8 19.8 0 0 1 3.1 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.62a2 2 0 0 1-.45 2.11L9.02 10.68a16 16 0 0 0 4.3 4.3l1.23-1.23a2 2 0 0 1 2.11-.45c.84.29 1.72.5 2.62.62A2 2 0 0 1 22 16.92z"></path>
+        </svg>
+        +91 7411515850
+      </span>
+      <span className="contact-chip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
+          <polyline points="3 7 12 13 21 7"></polyline>
+        </svg>
+        navion.team.official@gmail.com
+      </span>
+      <span className="contact-chip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
+          <polyline points="3 7 12 13 21 7"></polyline>
+        </svg>
+        labs@quantum-orbital-explorer.local
+      </span>
+    </div>
+    <p className="contact-hours">Response Window: Monday to Friday, 09:00-18:00 UTC</p>
+  </>
+);
+
+const LearnTopicPage = ({ topic, onNavigate }) => {
+  const xAxisKey = topic.chartData?.length > 0 ? Object.keys(topic.chartData[0])[0] : 'x';
+
+  return (
+    <InfoPageLayout
+      eyebrow={topic.eyebrow}
+      title={topic.title}
+      message={topic.message}
+      heroClassName="hero-howto"
+      onNavigate={onNavigate}
+      showLearnSidebar={true}
+      activeLearnId={topic.id}
+      ctaLabel="Open Simulator"
+      ctaTarget="simulator"
+    >
+      <InfoSection
+        title="Core Theory"
+        subtitle="Detailed conceptual notes for this module."
+      >
+        <div className="info-grid two-column">
+          {topic.theoryCards.map((card) => (
+            <article className="glass-card" key={card.title}>
+              <h3>{card.title}</h3>
+              <p>{card.text}</p>
+            </article>
+          ))}
+        </div>
+      </InfoSection>
+
+      <InfoSection
+        title="Equations Driving This Topic"
+        subtitle="Use these equations as the formal bridge between theory and what you see in 3D."
+      >
+        <div className="info-grid two-column">
+          {topic.equations.map((equation) => (
+            <article className="glass-card" key={equation.title}>
+              <h3>{equation.title}</h3>
+              <ExpandableFormula className="compact" math={equation.math} />
+              <p>{equation.description}</p>
+            </article>
+          ))}
+        </div>
+      </InfoSection>
+
+      <InfoSection title={topic.chartTitle} subtitle={topic.chartSubtitle}>
+        <article className="glass-card chart-card">
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={topic.chartData} margin={{ top: 10, right: 12, left: 2, bottom: 0 }}>
+              <CartesianGrid stroke="#2f4660" strokeDasharray="4 4" />
+              <XAxis dataKey={xAxisKey} stroke="#a7c9e8" />
+              <YAxis stroke="#a7c9e8" />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Legend />
+              {topic.chartLines.map((line) => (
+                <Line key={line.dataKey} type="monotone" dataKey={line.dataKey} name={line.name} stroke={line.color} strokeWidth={2.2} dot={false} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </article>
+      </InfoSection>
+
+      <InfoSection title="Structured Reference Table" subtitle="Fast lookup summary for teaching, revision, and solved workflows.">
+        <DataTable columns={topic.table.columns} rows={topic.table.rows} compact />
+      </InfoSection>
+
+      <InfoSection title="Image Slots" subtitle="Use these placeholders for portraits, orbital renders, and annotated diagrams.">
+        <div className="learn-image-grid">
+          {topic.imageSlots.map((slot) => (
+            <article className="glass-card learn-image-card" key={slot.title}>
+              <h3>{slot.title}</h3>
+              <div className="learn-image-placeholder">Image Placeholder</div>
+              <p>{slot.description}</p>
+            </article>
+          ))}
+        </div>
+      </InfoSection>
+    </InfoPageLayout>
+  );
+};
+
 const InfoFooter = ({ onNavigate }) => (
   <footer className="site-footer">
     <div className="site-footer-grid">
       <section className="footer-about">
-        <h3>About</h3>
-        <p>
-          Quantum Orbital Explorer is an educational visualization studio for understanding Schrodinger solutions,
-          orbital topology, and chemistry-ready intuition.
+        <h3>Company</h3>
+        <p style={{ marginBottom: '12px', color: '#c0d9ef', fontSize: '0.85rem', lineHeight: '1.4' }}>
+          Quantum Orbital Explorer is a specialized studio built to deliver professional, physics-accurate visualizations for modern chemistry research and classrooms.
         </p>
+        <div className="footer-link-list footer-company-links">
+          <button className="footer-link-button" type="button" onClick={() => onNavigate('about')}>about</button>
+          <button className="footer-link-button" type="button" onClick={() => onNavigate('terms')}>terms</button>
+          <button className="footer-link-button" type="button" onClick={() => onNavigate('contact')}>contact</button>
+        </div>
       </section>
 
       <section className="footer-links">
@@ -716,37 +1256,20 @@ const InfoFooter = ({ onNavigate }) => (
 
       <section className="footer-contact">
         <h3>Contact</h3>
-        <div className="contact-inline">
-          <span className="contact-chip">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.8 19.8 0 0 1 3.1 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.62a2 2 0 0 1-.45 2.11L9.02 10.68a16 16 0 0 0 4.3 4.3l1.23-1.23a2 2 0 0 1 2.11-.45c.84.29 1.72.5 2.62.62A2 2 0 0 1 22 16.92z"></path>
-            </svg>
-            +91 7411515850
-          </span>
-          <span className="contact-chip">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
-              <polyline points="3 7 12 13 21 7"></polyline>
-            </svg>
-            navion.team.official@gmail.com
-          </span>
-          <span className="contact-chip">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
-              <polyline points="3 7 12 13 21 7"></polyline>
-            </svg>
-            labs@quantum-orbital-explorer.local
-          </span>
-        </div>
-        <p className="contact-hours">Response Window: Monday to Friday, 09:00-18:00 UTC</p>
+        <ContactChips />
       </section>
 
       <section className="footer-privacy">
-        <h3>Privacy Policy</h3>
-        <p>No account is required to run simulations.</p>
-        <p>Input parameters are processed to generate orbital visuals and are not sold to third parties.</p>
-        <p>Operational logs are retained briefly to maintain reliability and performance.</p>
-      </section>
+          <h3>Privacy Policy</h3>
+          <ul style={{ margin: "0 0 12px 0", paddingLeft: "16px", color: "#c0d9ef", fontSize: "0.85rem", lineHeight: "1.4" }}>
+            <li style={{ marginBottom: "6px" }}>Use inputs strictly for visual rendering without tracking profiles.</li>
+            <li style={{ marginBottom: "6px" }}>Run operational logs under tight retention to debug latency.</li>
+            <li>Protect workflows without injected ad-sale pipelines.</li>
+          </ul>
+          <div className="footer-link-list">
+            <button className="footer-link-button" type="button" onClick={() => onNavigate('privacy')}>read full privacy-policy</button>
+          </div>
+        </section>
     </div>
     <div className="site-footer-bottom">
       <span>2026 Quantum Orbital Explorer. Built for education, labs, and modern chemistry classrooms.</span>
@@ -754,36 +1277,62 @@ const InfoFooter = ({ onNavigate }) => (
   </footer>
 );
 
-const InfoPageLayout = ({ eyebrow, title, message, children, onNavigate, ctaLabel, ctaTarget, heroClassName = '' }) => (
-  <div className="info-page-shell">
-    {/* Left Fixed Ad Sidebar */}
-    <aside className="ad-sidebar ad-sidebar-left">
-      <div className="ad-content">
-        <span>Ad Space</span>
-      </div>
-    </aside>
+const InfoPageLayout = ({
+  eyebrow,
+  title,
+  message,
+  children,
+  onNavigate,
+  ctaLabel,
+  ctaTarget,
+  heroClassName = '',
+  showLearnSidebar = false,
+  activeLearnId = null,
+}) => (
+  <div className={`info-page-shell ${showLearnSidebar ? 'has-learn-sidebar' : ''}`.trim()}>
+    <div className={`info-page-main-layout ${showLearnSidebar ? 'has-learn-sidebar' : ''}`.trim()}>
+      {showLearnSidebar && (
+        <aside className="learn-sidebar" aria-label="Learn modules">
+          <div className="learn-sidebar-inner">
+            <h4>Learn Modules</h4>
+            <div className="learn-sidebar-links">
+              {learnMenuLinks.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`learn-sidebar-link ${activeLearnId === item.id ? 'is-active' : ''}`.trim()}
+                  onClick={() => onNavigate(item.id)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
+      )}
 
-    <main className="page-style">
-      <header className={`hero-panel ${heroClassName}`.trim()}>
-        <p className="hero-eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
-        <p className="hero-message">{message}</p>
-        {ctaLabel && ctaTarget && (
-          <button className="hero-cta" onClick={() => onNavigate(ctaTarget)} type="button">
-            {ctaLabel}
-          </button>
-        )}
-      </header>
+      <main className="page-style">
+        <header className={`hero-panel ${heroClassName}`.trim()}>
+          <p className="hero-eyebrow">{eyebrow}</p>
+          <h1>{title}</h1>
+          <p className="hero-message">{message}</p>
+          {ctaLabel && ctaTarget && (
+            <button className="hero-cta" onClick={() => onNavigate(ctaTarget)} type="button">
+              {ctaLabel}
+            </button>
+          )}
+        </header>
 
-      {children}
-    </main>
+        {children}
+      </main>
 
-    {/* Right Fixed Ad Sidebar */}
-    <aside className="ad-sidebar ad-sidebar-right">
-      <div className="ad-content">
-        <span>Ad Space</span>
-      </div>
-    </aside>
+      {/* Right Fixed Ad Sidebar */}
+      <aside className="ad-sidebar ad-sidebar-right">
+        <div className="ad-content">
+          <span>Ad Space</span>
+        </div>
+      </aside>
+    </div>
 
     <InfoFooter onNavigate={onNavigate} />
   </div>
@@ -792,7 +1341,10 @@ const InfoPageLayout = ({ eyebrow, title, message, children, onNavigate, ctaLabe
 // --- Main App Component ---
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('welcome'); // welcome, chemistry, howto, simulator
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (typeof window === 'undefined') return 'welcome';
+    return getPageFromHash(window.location.hash) || 'welcome';
+  }); // welcome, chemistry, howto, learn-*, simulator, about, terms, privacy, contact
 
   // Global Quantum Controls
   const [Z, setZ] = useState(1);
@@ -826,6 +1378,20 @@ const App = () => {
   const [graphHeight, setGraphHeight] = useState(220);
   const sliceOffsetLimit = useMemo(() => Math.max(2, gridSize * 0.95), [gridSize]);
   const slicePlaneExtent = useMemo(() => Math.max(10, gridSize * 2.4), [gridSize]);
+
+  const navigateToPage = (pageId) => {
+    if (!PAGE_ROUTE_MAP[pageId]) return;
+
+    setCurrentPage(pageId);
+
+    if (typeof window !== 'undefined') {
+      const nextHash = PAGE_ROUTE_MAP[pageId];
+      if (window.location.hash !== nextHash) {
+        window.location.hash = nextHash;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const updateSliceOffsetForAxis = (axis, value) => {
     const numeric = Number(value);
@@ -1004,6 +1570,26 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const syncPageWithHash = () => {
+      const hashPage = getPageFromHash(window.location.hash);
+      if (hashPage) {
+        setCurrentPage(hashPage);
+      }
+    };
+
+    if (!getPageFromHash(window.location.hash)) {
+      window.location.hash = PAGE_ROUTE_MAP.welcome;
+    } else {
+      syncPageWithHash();
+    }
+
+    window.addEventListener('hashchange', syncPageWithHash);
+    return () => window.removeEventListener('hashchange', syncPageWithHash);
+  }, []);
+
+  useEffect(() => {
     fetchData();
     // eslint-disable-next-line
   }, []); // Initial load
@@ -1014,91 +1600,119 @@ const App = () => {
       <div className={`top-nav ${currentPage === 'simulator' ? 'top-nav-simulator' : ''}`}>
         <h3>Quantum Orbital Explorer</h3>
         <div className="top-nav-buttons">
-          <button onClick={() => setCurrentPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome & Math</button>
-          <button onClick={() => setCurrentPage('chemistry')} style={navButtonStyle(currentPage === 'chemistry')}>Chemistry Concepts</button>
-          <button onClick={() => setCurrentPage('howto')} style={navButtonStyle(currentPage === 'howto')}>How To Use</button>
-          <button onClick={() => setCurrentPage('simulator')} style={navButtonStyle(currentPage === 'simulator')}><strong>Simulator</strong></button>
+          <button type="button" onClick={() => navigateToPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome</button>
+          <button type="button" onClick={() => navigateToPage('chemistry')} style={navButtonStyle(currentPage === 'chemistry')}>Chemistry Concepts</button>
+          <button type="button" onClick={() => navigateToPage('howto')} style={navButtonStyle(currentPage === 'howto')}>How To Use</button>
+
+          <div className="learn-nav-item">
+            <button
+              type="button"
+              className="learn-nav-trigger"
+              onClick={() => navigateToPage('learn-quantum-theory')}
+              style={navButtonStyle(isLearnPage(currentPage))}
+            >
+              Learn
+            </button>
+            <div
+              className="learn-dropdown"
+              role="menu"
+              aria-label="Learn pages"
+              onWheelCapture={(event) => event.preventDefault()}
+              onWheel={(event) => event.preventDefault()}
+              onTouchMove={(event) => event.preventDefault()}
+            >
+              {learnMenuLinks.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`learn-dropdown-item ${currentPage === item.id ? 'is-active' : ''}`.trim()}
+                  onClick={() => navigateToPage(item.id)}
+                >
+                  {item.shortLabel || item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button type="button" onClick={() => navigateToPage('simulator')} style={navButtonStyle(currentPage === 'simulator')}><strong>Simulator</strong></button>
         </div>
       </div>
 
       {currentPage === 'welcome' && (
         <InfoPageLayout
           eyebrow="Interactive Quantum Learning Platform"
-          title="See Orbitals Like a Professional Science Product"
-          message="Turn equations into rich 3D intuition with visual storytelling, symbol boxes, and decision-ready comparison views inspired by modern product design."
+          title="Quantum Orbital Explorer"
+          message="A visual learning and simulation workspace for understanding orbital behavior, chemistry intuition, and quantum model interpretation."
           heroClassName="hero-welcome"
-          onNavigate={setCurrentPage}
+          onNavigate={navigateToPage}
           ctaLabel="Continue to Chemistry Concepts"
           ctaTarget="chemistry"
         >
           <InfoSection
-            title="The Equation Driving The Simulator"
-            subtitle="The model is built from exact hydrogenic solutions in spherical coordinates."
+            title="Welcome Overview"
+            subtitle="Core context after the main header."
           >
             <div className="info-grid two-column">
               <article className="glass-card">
+                <h3>What is this tool?</h3>
                 <p>
-                  The time-independent Schrodinger equation gives the stationary states for one-electron atoms:
-                </p>
-                <ExpandableFormula math={'\\hat{H}\\psi = E\\psi'} />
-                <p>
-                  The total wavefunction separates naturally into radial and angular components:
-                </p>
-                <ExpandableFormula math={'\\psi_{n,\\ell,m}(r,\\theta,\\phi)=R_{n,\\ell}(r)\\,Y_{\\ell,m}(\\theta,\\phi)'} />
-                <p>
-                  Probability density is measured through <InlineMath math={'|\\psi|^2'} />, which is what your scatter cloud approximates.
+                  This tool is an interactive orbital visualization platform. It combines a 3D simulator, radial probability graph, and guided theory pages in one environment.
                 </p>
               </article>
 
-              <article className="glass-card chart-card">
-                <h3>Shell Growth vs Relative Density</h3>
-                <ResponsiveContainer width="100%" height={260}>
-                  <AreaChart data={energyProfileData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="radiusGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#30c6ff" stopOpacity={0.8} />
-                        <stop offset="100%" stopColor="#30c6ff" stopOpacity={0.05} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke="#2f4660" strokeDasharray="4 4" />
-                    <XAxis dataKey="shell" stroke="#a7c9e8" />
-                    <YAxis stroke="#a7c9e8" />
-                    <Tooltip contentStyle={chartTooltipStyle} />
-                    <Legend />
-                    <Area type="monotone" dataKey="radius" name="Relative Radius" stroke="#30c6ff" fill="url(#radiusGradient)" strokeWidth={2.2} />
-                    <Line type="monotone" dataKey="density" name="Relative Density" stroke="#ffd265" strokeWidth={2} dot={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <article className="glass-card">
+                <h3>Why is it useful?</h3>
+                <p>
+                  It turns abstract concepts into inspectable geometry. Students and researchers can immediately test predictions about shape, nodes, phase, and shell behavior.
+                </p>
+              </article>
+
+              <article className="glass-card">
+                <h3>Who is it for?</h3>
+                <p>
+                  It is for high-school and college learners, chemistry and physics instructors, and anyone who wants intuition for wave mechanics through visual exploration.
+                </p>
+              </article>
+
+              <article className="glass-card">
+                <h3>What can users visualize?</h3>
+                <p>
+                  Users can visualize orbital clouds, phase polarity, nodal surfaces, orientation changes with quantum numbers, and radial probability trends in real time.
+                </p>
               </article>
             </div>
           </InfoSection>
 
           <InfoSection
-            title="Deciphering The Quantum Numbers"
-            subtitle="The four fundamental parameters of the quantum model."
-          >
-            <SymbolCardVertical />
-          </InfoSection>
-
-          <InfoSection
-            title="Radial & Angular Separability"
-            subtitle="How we construct volumetric regions mathematically."
+            title="Equation Driving The Simulator"
+            subtitle="Mathematical structure behind the rendered orbital cloud."
           >
             <div className="info-grid two-column">
               <article className="glass-card">
-                <h3>The Radial Function <InlineMath math={'R_{n, l}(r)'} /></h3>
-                <p>Governs the amplitude of the electron's distance <InlineMath math={'r'} /> from the nucleus. Built from Laguerre polynomials.</p>
-                <ExpandableFormula className="compact" math={'R_{n,l}(r) = \\sqrt{\\left(\\frac{2Z}{n a_0}\\right)^3 \\dots} e^{-\\frac{Zr}{na_0}} L_{n-l-1}^{2l+1}\\left(\\frac{2Zr}{na_0}\\right)'} />
-                <p>Features include exponential decay towards infinity and oscillating zeroes (radial nodes).</p>
+                <h3>Formula Components</h3>
+                <p>
+                  The simulator uses the stationary one-electron quantum model where the total state is built from a radial part and an angular part. The backend computes density samples from these components and the frontend renders them as a 3D point cloud.
+                </p>
+                <p>
+                  <strong>Formula form:</strong> <InlineMath math={'\\psi_{n,l,m}(r,\\theta,\\phi)=R_{n,l}(r)Y_l^m(\\theta,\\phi)'} />
+                </p>
               </article>
 
               <article className="glass-card">
-                <h3>Spherical Harmonics <InlineMath math={'Y_{l, m}(\\theta, \\phi)'} /></h3>
-                <p>Controls the angular distribution around the nucleus using Legendre polynomials. This generates the familiar orbital shapes.</p>
-                <ExpandableFormula className="compact harmonic-compact" math={'Y_{l,m}(\\theta,\\phi) = \\sqrt{\\frac{(2l+1)}{4\\pi}\\frac{(l-m)!}{(l+m)!}} P_l^m(\\cos\\theta) e^{im\\phi}'} />
-                <p>Phase rules dictate structural geometry and directivity, key components in chemistry.</p>
+                <h3>Wavefunction Equation</h3>
+                <ExpandableFormula className="compact" math={'\\psi_{n,l,m}(r,\\theta,\\phi)=R_{n,l}(r)Y_l^m(\\theta,\\phi)'} />
+                <p>
+                  The rendered probability cloud is sampled from <InlineMath math={'|\\psi_{n,l,m}(r,\\theta,\\phi)|^2'} />, which maps where the electron is most likely to be observed.
+                </p>
               </article>
             </div>
+
+            <article className="glass-card equation-cta-card">
+              <p>For more detailed understanding, please check out the Learn modules.</p>
+              <button className="hero-cta equation-learn-button" type="button" onClick={() => navigateToPage('learn-quantum-theory')}>
+                Checkout Learn Modules
+              </button>
+            </article>
           </InfoSection>
         </InfoPageLayout>
       )}
@@ -1109,10 +1723,17 @@ const App = () => {
           title="Orbital Structures and Wavefunction Phase"
           message="Understand the building blocks of matter. By mapping atomic orbitals and phase, we can predict bonding, geometry, and chemical reactivity."
           heroClassName="hero-chemistry"
-          onNavigate={setCurrentPage}
+          onNavigate={navigateToPage}
           ctaLabel="Continue to How To Use"
           ctaTarget="howto"
         >
+          <InfoSection
+            title="Deciphering The Quantum Numbers"
+            subtitle="Foundational parameter definitions in the same page format before orbital-family exploration."
+          >
+            <SymbolCardGrid />
+          </InfoSection>
+
           <InfoSection
             title="The Orbital Families"
             subtitle="The shape and energy of probability clouds are defined by quantum numbers."
@@ -1237,7 +1858,7 @@ const App = () => {
           title="From Parameter Selection To Interpretation"
           message="Use this page as an execution checklist so every simulation run gives actionable chemistry insight, not just a beautiful picture."
           heroClassName="hero-howto"
-          onNavigate={setCurrentPage}
+          onNavigate={navigateToPage}
           ctaLabel="Launch Simulator"
           ctaTarget="simulator"
         >
@@ -1318,6 +1939,144 @@ const App = () => {
                 </div>
               </article>
             </div>
+          </InfoSection>
+        </InfoPageLayout>
+      )}
+
+      {learnTopicMap[currentPage] && (
+        <LearnTopicPage topic={learnTopicMap[currentPage]} onNavigate={navigateToPage} />
+      )}
+
+      {currentPage === 'about' && (
+        <InfoPageLayout
+          eyebrow="Information Page"
+          title="About Quantum Orbital Explorer"
+          message="This dedicated URL page describes product purpose, architecture, and intended educational outcomes."
+          heroClassName="hero-howto"
+          onNavigate={navigateToPage}
+          ctaLabel="Open Learn Modules"
+          ctaTarget="learn-quantum-theory"
+        >
+          <InfoSection title="Platform Purpose" subtitle="Why this tool exists and what it delivers.">
+            <div className="info-grid two-column">
+              <article className="glass-card">
+                <h3>Mission</h3>
+                <p>
+                  Quantum Orbital Explorer is designed to bridge theory and intuition through high-fidelity visualization, structured learning pages, and guided controls.
+                </p>
+              </article>
+              <article className="glass-card">
+                <h3>Outcome</h3>
+                <p>
+                  Users move from formulas and abstract rules to concrete orbital interpretations by directly observing geometry, nodes, and probability behavior.
+                </p>
+              </article>
+            </div>
+          </InfoSection>
+
+          <InfoSection title="System Overview" subtitle="Core components and responsibilities.">
+            <DataTable
+              columns={['Layer', 'Role', 'Key Output']}
+              rows={[
+                ['Frontend', 'Interactive controls and visual layout', '3D orbital cloud and learning pages'],
+                ['Backend', 'Radial/scatter calculations and caching', 'Binary point payloads and radial arrays'],
+                ['Learning Hub', 'Theory/equations/charts/tables', 'Curriculum-style explainers and references'],
+              ]}
+            />
+          </InfoSection>
+        </InfoPageLayout>
+      )}
+
+      {currentPage === 'terms' && (
+        <InfoPageLayout
+          eyebrow="Information Page"
+          title="Terms and Conditions"
+          message="This dedicated URL page outlines acceptable use, content scope, and operational limitations."
+          heroClassName="hero-howto"
+          onNavigate={navigateToPage}
+          ctaLabel="Back to Welcome"
+          ctaTarget="welcome"
+        >
+          <InfoSection title="Usage Terms" subtitle="Summary terms for learning and simulation usage.">
+            <DataTable
+              columns={['Term Area', 'Condition', 'Practical Meaning']}
+              rows={[
+                ['Educational Use', 'Content is educational and exploratory', 'Use outputs as learning support'],
+                ['Scientific Review', 'Interpretations should be reviewed in context', 'Validate for formal assessments'],
+                ['Availability', 'Service may change as modules evolve', 'Layouts and content can be updated'],
+                ['External Media', 'Image placeholders may link to third-party assets', 'Ensure rights for uploaded media'],
+              ]}
+            />
+          </InfoSection>
+
+          <InfoSection title="Policy Links" subtitle="Dedicated routes for legal and contact pages.">
+            <div className="footer-link-list">
+              {infoPageLinks.map((link) => (
+                <button key={link.id} className="footer-link-button" type="button" onClick={() => navigateToPage(link.id)}>
+                  {link.label}: {PAGE_ROUTE_MAP[link.id]}
+                </button>
+              ))}
+            </div>
+          </InfoSection>
+        </InfoPageLayout>
+      )}
+
+      {currentPage === 'privacy' && (
+        <InfoPageLayout
+          eyebrow="Information Page"
+          title="Privacy Policy"
+          message="This dedicated URL page explains what data is used for simulation and how operational logs are treated."
+          heroClassName="hero-howto"
+          onNavigate={navigateToPage}
+          ctaLabel="Go to Contact"
+          ctaTarget="contact"
+        >
+          <InfoSection title="Data Handling" subtitle="Summary of data categories and usage.">
+            <DataTable
+              columns={['Data Type', 'Purpose', 'Retention']}
+              rows={[
+                ['Simulation parameters', 'Generate scatter and radial outputs', 'Short-lived request scope'],
+                ['Operational logs', 'Performance and reliability debugging', 'Limited retention window'],
+                ['Contact details', 'Respond to user inquiries', 'Retained only for communication workflow'],
+              ]}
+            />
+          </InfoSection>
+
+          <InfoSection title="User Control" subtitle="Navigation links to supporting policy pages.">
+            <div className="footer-link-list">
+              <button className="footer-link-button" type="button" onClick={() => navigateToPage('about')}>About URL: {PAGE_ROUTE_MAP.about}</button>
+              <button className="footer-link-button" type="button" onClick={() => navigateToPage('terms')}>Terms URL: {PAGE_ROUTE_MAP.terms}</button>
+              <button className="footer-link-button" type="button" onClick={() => navigateToPage('contact')}>Contact URL: {PAGE_ROUTE_MAP.contact}</button>
+            </div>
+          </InfoSection>
+        </InfoPageLayout>
+      )}
+
+      {currentPage === 'contact' && (
+        <InfoPageLayout
+          eyebrow="Information Page"
+          title="Contact"
+          message="This dedicated URL page centralizes support channels, response windows, and communication workflow."
+          heroClassName="hero-howto"
+          onNavigate={navigateToPage}
+          ctaLabel="Open Simulator"
+          ctaTarget="simulator"
+        >
+          <InfoSection title="Primary Contact Channels">
+            <article className="glass-card">
+              <ContactChips />
+            </article>
+          </InfoSection>
+
+          <InfoSection title="Support Workflow" subtitle="How requests are processed.">
+            <DataTable
+              columns={['Stage', 'What Happens', 'Expected Result']}
+              rows={[
+                ['Message received', 'Contact details and issue category are captured', 'Ticket context is prepared'],
+                ['Technical review', 'Simulation or content issue is investigated', 'Actionable response prepared'],
+                ['Follow-up', 'Resolution steps are shared with user', 'Issue closed or escalated'],
+              ]}
+            />
           </InfoSection>
         </InfoPageLayout>
       )}
@@ -1532,3 +2291,6 @@ const navButtonStyle = (isActive) => ({
 });
 
 export default App;
+
+
+
