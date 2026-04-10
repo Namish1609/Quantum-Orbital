@@ -1430,7 +1430,7 @@ const InfoFooter = ({ onNavigate }) => (
     <div className="site-footer-grid">
       <section className="footer-about">
         <h3>Company</h3>
-        <p style={{ marginBottom: '12px', color: '#c0d9ef', fontSize: '0.85rem', lineHeight: '1.4' }}>
+        <p className="footer-summary">
           Quantum Orbital Explorer is a specialized studio built to deliver professional, physics-accurate visualizations for modern chemistry research and classrooms.
         </p>
         <div className="footer-link-list footer-company-links">
@@ -1463,9 +1463,9 @@ const InfoFooter = ({ onNavigate }) => (
 
       <section className="footer-privacy">
           <h3>Privacy Policy</h3>
-          <ul style={{ margin: "0 0 12px 0", paddingLeft: "16px", color: "#c0d9ef", fontSize: "0.85rem", lineHeight: "1.4" }}>
-            <li style={{ marginBottom: "6px" }}>Use inputs strictly for visual rendering without tracking profiles.</li>
-            <li style={{ marginBottom: "6px" }}>Run operational logs under tight retention to debug latency.</li>
+          <ul className="footer-privacy-list">
+            <li>Use inputs strictly for visual rendering without tracking profiles.</li>
+            <li>Run operational logs under tight retention to debug latency.</li>
             <li>Protect workflows without injected ad-sale pipelines.</li>
           </ul>
           <div className="footer-link-list">

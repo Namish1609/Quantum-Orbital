@@ -6,7 +6,7 @@
   --info-layout-gap: clamp(6px, 1.1vw, 28px);
   --info-page-max-width: clamp(980px, 74vw, 2500px);
   --info-page-inline-padding: clamp(18px, 2.3vw, 64px);
-  --info-footer-max-width: clamp(1280px, 95vw, 2520px);
+  --info-footer-max-width: clamp(1280px, 96vw, 3400px);
   --hero-pattern-max-width: 3600px;
   --ink-100: #edf6ff;
   --ink-80: #c5def4;
@@ -1361,6 +1361,29 @@ code {
   font-size: 0.93rem;
 }
 
+.footer-summary {
+  margin: 0 0 12px;
+  color: #c0d9ef;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.footer-privacy-list {
+  margin: 0 0 12px 0;
+  padding-left: 16px;
+  color: #c0d9ef;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.footer-privacy-list li {
+  margin-bottom: 6px;
+}
+
+.footer-privacy-list li:last-child {
+  margin-bottom: 0;
+}
+
 .footer-link-list {
   display: flex;
   flex-wrap: wrap;
@@ -1404,6 +1427,43 @@ code {
   padding: 14px clamp(22px, 4.2vw, 92px) 20px;
   color: #98b7d3;
   font-size: 0.84rem;
+}
+
+@media (min-width: 1600px) {
+  .site-footer-grid {
+    grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.25fr) minmax(380px, 1.45fr) minmax(420px, 1.8fr);
+    gap: clamp(32px, 2.7vw, 76px);
+    padding: clamp(36px, 2.8vw, 62px) clamp(34px, 4.8vw, 132px) clamp(28px, 2.3vw, 44px);
+  }
+
+  .site-footer-grid h3 {
+    font-size: clamp(1.12rem, 0.55vw + 0.62rem, 1.38rem);
+  }
+
+  .site-footer-grid p,
+  .footer-summary,
+  .footer-privacy-list {
+    font-size: clamp(0.98rem, 0.35vw + 0.62rem, 1.12rem);
+    line-height: 1.52;
+  }
+
+  .footer-link-button {
+    font-size: clamp(0.96rem, 0.28vw + 0.62rem, 1.08rem);
+  }
+
+  .contact-chip {
+    font-size: clamp(0.9rem, 0.24vw + 0.62rem, 1rem);
+    padding: 8px 12px;
+  }
+
+  .site-footer-bottom {
+    padding: 16px clamp(34px, 4.8vw, 132px) 24px;
+    font-size: clamp(0.88rem, 0.22vw + 0.66rem, 0.98rem);
+  }
+
+  .footer-privacy {
+    max-width: none;
+  }
 }
 
 @media (min-width: 1800px) {
