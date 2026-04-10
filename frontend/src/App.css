@@ -825,11 +825,11 @@ code {
 .faq-item.is-open .faq-answer {
   opacity: 1;
   transform: translateY(0);
-  padding: 0 16px 14px;
+  padding: 0 16px 16px;
 }
 
 .faq-answer p {
-  margin: 12px 0 0;
+  margin: 12px 0 2px;
   color: #cbe2f6;
   line-height: 1.55;
 }
@@ -1869,7 +1869,7 @@ code {
   }
 
   .faq-item.is-open .faq-answer {
-    padding: 0 14px 13px;
+    padding: 0 14px 15px;
   }
 
   .site-footer {

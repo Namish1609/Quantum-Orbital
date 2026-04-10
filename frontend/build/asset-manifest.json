@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.d8bdf02a.css",
-    "main.js": "/static/js/main.08750f7a.js",
+    "main.css": "/static/css/main.880fc0ba.css",
+    "main.js": "/static/js/main.83470340.js",
     "static/media/wp15211542.jpg": "/static/media/wp15211542.f7d505675a2b19fb7203.jpg",
     "static/media/KaTeX_AMS-Regular.ttf": "/static/media/KaTeX_AMS-Regular.853be92419a6c3766b9a.ttf",
     "static/media/KaTeX_Main-Regular.ttf": "/static/media/KaTeX_Main-Regular.9eba1d77abcf2aa6e94e.ttf",
@@ -64,11 +64,11 @@
     "static/media/KaTeX_Size3-Regular.woff": "/static/media/KaTeX_Size3-Regular.7947224e8a9914fa332b.woff",
     "static/media/KaTeX_Size3-Regular.woff2": "/static/media/KaTeX_Size3-Regular.e1951519f6f0596f7356.woff2",
     "index.html": "/index.html",
-    "main.d8bdf02a.css.map": "/static/css/main.d8bdf02a.css.map",
-    "main.08750f7a.js.map": "/static/js/main.08750f7a.js.map"
+    "main.880fc0ba.css.map": "/static/css/main.880fc0ba.css.map",
+    "main.83470340.js.map": "/static/js/main.83470340.js.map"
   },
   "entrypoints": [
-    "static/css/main.d8bdf02a.css",
-    "static/js/main.08750f7a.js"
+    "static/css/main.880fc0ba.css",
+    "static/js/main.83470340.js"
   ]
 }

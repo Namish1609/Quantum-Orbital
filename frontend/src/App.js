@@ -432,8 +432,8 @@ const quickLinks = [
   { id: 'welcome', label: 'Welcome' },
   { id: 'chemistry', label: 'Chemistry Concepts' },
   { id: 'howto', label: 'How To Use' },
-  { id: 'faqs', label: 'FAQs' },
   { id: 'learn-quantum-theory', label: 'Learn' },
+  { id: 'faqs', label: 'FAQs' },
   { id: 'simulator', label: 'Simulator' },
 ];
 
@@ -1400,16 +1400,6 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
         <DataTable columns={topic.table.columns} rows={topic.table.rows} compact />
       </InfoSection>
 
-      {Array.isArray(topic.faqs) && topic.faqs.length > 0 && (
-        <InfoSection title="Module FAQs" subtitle="Quick answers for common questions in this module.">
-          <div className="faq-list">
-            {topic.faqs.map((faq) => (
-              <FAQAccordion key={faq.question} question={faq.question} answer={faq.answer} />
-            ))}
-          </div>
-        </InfoSection>
-      )}
-
       <InfoSection title="Image Slots" subtitle="Use these placeholders for portraits, orbital renders, and annotated diagrams.">
         <div className="learn-image-grid">
           {topic.imageSlots.map((slot) => (
@@ -1421,6 +1411,16 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
           ))}
         </div>
       </InfoSection>
+
+      {Array.isArray(topic.faqs) && topic.faqs.length > 0 && (
+        <InfoSection title="Module FAQs" subtitle="Quick answers for common questions in this module.">
+          <div className="faq-list">
+            {topic.faqs.map((faq) => (
+              <FAQAccordion key={faq.question} question={faq.question} answer={faq.answer} />
+            ))}
+          </div>
+        </InfoSection>
+      )}
     </InfoPageLayout>
   );
 };
@@ -1805,7 +1805,6 @@ const App = () => {
           <button type="button" onClick={() => navigateToPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome</button>
           <button type="button" onClick={() => navigateToPage('chemistry')} style={navButtonStyle(currentPage === 'chemistry')}>Chemistry Concepts</button>
           <button type="button" onClick={() => navigateToPage('howto')} style={navButtonStyle(currentPage === 'howto')}>How To Use</button>
-          <button type="button" onClick={() => navigateToPage('faqs')} style={navButtonStyle(currentPage === 'faqs')}>FAQs</button>
 
           <div className="learn-nav-item">
             <button
@@ -1836,6 +1835,8 @@ const App = () => {
               ))}
             </div>
           </div>
+
+          <button type="button" onClick={() => navigateToPage('faqs')} style={navButtonStyle(currentPage === 'faqs')}>FAQs</button>
 
           <button type="button" onClick={() => navigateToPage('simulator')} style={navButtonStyle(currentPage === 'simulator')}><strong>Simulator</strong></button>
         </div>
@@ -2146,6 +2147,10 @@ const App = () => {
         </InfoPageLayout>
       )}
 
+      {learnTopicMap[currentPage] && (
+        <LearnTopicPage topic={learnTopicMap[currentPage]} onNavigate={navigateToPage} />
+      )}
+
       {currentPage === 'faqs' && (
         <InfoPageLayout
           eyebrow="Support and Guidance"
@@ -2194,10 +2199,6 @@ const App = () => {
             </div>
           </InfoSection>
         </InfoPageLayout>
-      )}
-
-      {learnTopicMap[currentPage] && (
-        <LearnTopicPage topic={learnTopicMap[currentPage]} onNavigate={navigateToPage} />
       )}
 
       {currentPage === 'about' && (
