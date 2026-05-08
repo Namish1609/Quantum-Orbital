@@ -55,7 +55,6 @@ const MAX_SIMULTANEOUS_SLICE_AXES = 2;
 const SLICE_AXIS_ORDER = ['x', 'y', 'z'];
 const GRAPH_RETRACE_DURATION_MS = 320;
 const ORBITAL_CENTER = new THREE.Vector3(0, 0, 0);
-const FIXED_Z_VALUE = 1;
 
 const getSliceClippingPlane = (axis, centerOffset = 0) => {
   const center = Number.isFinite(centerOffset) ? centerOffset : 0;
@@ -3175,6 +3174,7 @@ const App = () => {
   }); // welcome, chemistry, howto, faqs, learn-*, simulator, about, terms, privacy, contact
 
   // Global Quantum Controls
+  const [Z, setZ] = useState(1);
   const [n, setN] = useState(3);
   const [l, setL] = useState(2);
   const [m, setM] = useState(0);
@@ -3314,7 +3314,7 @@ const App = () => {
     
     try {
       // Fetch Radial Data
-      const radialRes = await fetch(`${API_BASE_URL}/radial?Z=${FIXED_Z_VALUE}&n=${n}&l=${l}&size=${gridSize}`);
+      const radialRes = await fetch(`${API_BASE_URL}/radial?Z=${Z}&n=${n}&l=${l}&size=${gridSize}`);
       const radialJson = await parseApiResponse(radialRes, 'Radial API');
       
       if (Array.isArray(radialJson.data)) {
@@ -3323,7 +3323,7 @@ const App = () => {
 
       // Fetch 3D Data
       const params = new URLSearchParams({
-        Z: FIXED_Z_VALUE, n, l, m,
+        Z, n, l, m,
         show_phase: showPhase,
         size: gridSize
       });
@@ -4195,7 +4195,7 @@ const App = () => {
             <label>Principal (n): {n} <input type="range" value={n} min={1} max={10} onChange={e => setN(parseInt(e.target.value))} /></label>
             <label>Azimuthal (l): {l} <input type="range" value={l} min={0} max={n-1} onChange={e => setL(parseInt(e.target.value))} /></label>
             <label>Magnetic (m): {m} <input type="range" value={m} min={-l} max={l} onChange={e => setM(parseInt(e.target.value))} /></label>
-            <label>Target (Z): {FIXED_Z_VALUE} (fixed)</label>
+            <label>Target (Z): {Z} <input type="range" value={Z} min={1} max={20} onChange={e => setZ(parseInt(e.target.value))} /></label>
           </div>
 
           <hr style={{ borderColor: '#444' }}/>

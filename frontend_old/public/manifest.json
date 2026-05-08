@@ -1,0 +1,18 @@
+{
+  "name": "Quantum Orbital Explorer",
+  "short_name": "QOrbitals",
+  "description": "Interactive quantum orbital simulator with detailed learning modules and visualized wave mechanics.",
+  "start_url": "/#/welcome",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08111d",
+  "theme_color": "#08111d",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

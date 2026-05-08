@@ -12,9 +12,27 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
+import {
+  Atom,
+  BookOpen,
+  FileText,
+  FlaskConical,
+  HelpCircle,
+  Info,
+  Mail,
+  Menu,
+  Microscope,
+  ScrollText,
+  ShieldCheck,
+  Workflow,
+  X,
+} from 'lucide-react';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
+import RefurbishedSimulator from './components/Simulator.jsx';
 import './App.css';
+import './refurbished-styles.css';
+import './refurbished-integration.css';
 
 // Create a circular sprite texture for classic hard-edged point rendering.
 const createCircleTexture = () => {
@@ -577,12 +595,11 @@ const moduleTwoRadialNodeData = moduleTwoRadialNodeRaw.map((point) => ({
 }));
 
 const quickLinks = [
-  { id: 'welcome', label: 'Welcome' },
-  { id: 'chemistry', label: 'Chemistry Concepts' },
-  { id: 'howto', label: 'How To Use' },
+  { id: 'simulator', label: 'Lab' },
+  { id: 'chemistry', label: 'Quantum Chemistry' },
+  { id: 'howto', label: 'Protocol' },
   { id: 'learn-quantum-theory', label: 'Learn' },
-  { id: 'faqs', label: 'FAQs' },
-  { id: 'simulator', label: 'Simulator' },
+  { id: 'faqs', label: 'FAQ' },
 ];
 
 const siteFaqs = [
@@ -1772,9 +1789,9 @@ const learnMenuLinks = [
   ...learnTopics.map((topic, index) => ({
     id: topic.id,
     moduleNumber: index + 1,
-    label: topic.label,
+    label: topic.label.replace(/^\d+\.\s*/, ''),
     shortLabel: topic.shortLabel,
-    numberedShortLabel: `${index + 1}. ${topic.shortLabel}`,
+    numberedShortLabel: topic.shortLabel,
   })),
 ];
 
@@ -1786,7 +1803,6 @@ const infoPageLinks = [
 ];
 
 const PAGE_ROUTE_MAP = {
-  welcome: '#/welcome',
   chemistry: '#/chemistry',
   howto: '#/how-to-use',
   faqs: '#/faqs',
@@ -1797,7 +1813,7 @@ const PAGE_ROUTE_MAP = {
   'learn-radial-angular-nodes': '#/learn/radial-angular-nodes',
   'learn-probability-functions': '#/learn/probability-functions',
   'learn-solved-examples': '#/learn/solved-examples',
-  simulator: '#/simulator',
+  simulator: '#/lab',
   about: '#/about',
   terms: '#/terms-and-conditions',
   privacy: '#/privacy-policy',
@@ -1808,6 +1824,8 @@ const HASH_PAGE_MAP = Object.entries(PAGE_ROUTE_MAP).reduce((acc, [page, route])
   acc[route] = page;
   return acc;
 }, {});
+HASH_PAGE_MAP['#/simulator'] = 'simulator';
+HASH_PAGE_MAP['#/welcome'] = 'simulator';
 
 const learnTopicMap = learnTopics.reduce((acc, topic) => {
   acc[topic.id] = topic;
@@ -1828,6 +1846,64 @@ const getPageFromHash = (rawHash) => {
 
 const isLearnPage = (pageId) => typeof pageId === 'string' && pageId.startsWith('learn-');
 
+const learnHeroClassById = {
+  'learn-quantum-theory': 'hero-quantum-theory',
+  'learn-quantum-numbers-detail': 'hero-quantum-numbers',
+  'learn-orbital-geometry': 'hero-orbital-geometry',
+  'learn-nodes-antinodes': 'hero-nodes',
+  'learn-radial-angular-nodes': 'hero-radial-nodes',
+  'learn-probability-functions': 'hero-probability',
+  'learn-solved-examples': 'hero-solved-examples',
+};
+
+const stripSectionNumber = (title) => String(title).replace(/^\s*\d+\)\s*/, '');
+
+const MiniRadialPreview = () => {
+  const points = [
+    { r: 0, p: 0 },
+    { r: 1, p: 42 },
+    { r: 2, p: 83 },
+    { r: 3, p: 62 },
+    { r: 4, p: 31 },
+    { r: 5, p: 16 },
+  ]
+    .map((point, index, data) => {
+      const x = (index / (data.length - 1)) * 100;
+      const y = 100 - point.p;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+
+  return (
+    <div className="mini-radial-preview" aria-hidden="true">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img">
+        <polyline points={`0,100 ${points} 100,100`} className="mini-radial-fill" />
+        <polyline points={points} className="mini-radial-line" />
+      </svg>
+    </div>
+  );
+};
+
+const iconForPage = (pageId) => {
+  if (pageId === 'simulator') return Microscope;
+  if (pageId === 'chemistry') return FlaskConical;
+  if (pageId === 'howto') return Workflow;
+  if (isLearnPage(pageId)) return BookOpen;
+  if (pageId === 'faqs') return HelpCircle;
+  if (pageId === 'privacy') return ShieldCheck;
+  return ScrollText;
+};
+
+const RailNavButton = ({ item, active, onClick }) => {
+  const Icon = iconForPage(item.id);
+  return (
+    <button className={active ? 'active' : ''} type="button" onClick={onClick}>
+      <Icon size={17} aria-hidden="true" />
+      <span>{item.label}</span>
+    </button>
+  );
+};
+
 const chartTooltipStyle = {
   backgroundColor: '#0f1722',
   border: '1px solid #2f4c6a',
@@ -1840,9 +1916,16 @@ const AnimatedSection = ({ children, className = '' }) => {
   const domRef = useRef();
 
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      setIsVisible(entries[0].isIntersecting);
-    }, { threshold: 0.1 });
+    if (typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setIsVisible(true);
+      observer.disconnect();
+    }, { rootMargin: '0px 0px 22% 0px', threshold: 0.02 });
 
     if (domRef.current) observer.observe(domRef.current);
     return () => observer.disconnect();
@@ -2091,7 +2174,7 @@ const ContactChips = () => (
 
 const ModuleOneSectionHeading = ({ title }) => (
   <div className="info-section-heading module1-heading">
-    <h2>{title}</h2>
+    <h2>{stripSectionNumber(title)}</h2>
     <span className="module1-heading-rule" aria-hidden="true"></span>
   </div>
 );
@@ -2903,6 +2986,7 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
   const topicIndex = learnTopics.findIndex((item) => item.id === topic.id);
   const previousTopic = topicIndex > 0 ? learnMenuLinks[topicIndex - 1] : null;
   const nextTopic = topicIndex >= 0 && topicIndex < learnMenuLinks.length - 1 ? learnMenuLinks[topicIndex + 1] : null;
+  const heroClassName = learnHeroClassById[topic.id] || 'hero-quantum-theory';
 
   const moduleNavigationSection = (
     <InfoSection title="Module Navigation" subtitle="Go to the previous or next learning module.">
@@ -2935,11 +3019,11 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
         eyebrow={topic.eyebrow}
         title={topic.title}
         message={topic.message}
-        heroClassName="hero-howto"
+        heroClassName={heroClassName}
         onNavigate={onNavigate}
         showLearnSidebar={true}
         activeLearnId={topic.id}
-        ctaLabel="Open Simulator"
+        ctaLabel="Open Lab"
         ctaTarget="simulator"
       >
         <ModuleOneCoreTheoryContent />
@@ -2965,11 +3049,11 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
         eyebrow={topic.eyebrow}
         title={topic.title}
         message={topic.message}
-        heroClassName="hero-howto"
+        heroClassName={heroClassName}
         onNavigate={onNavigate}
         showLearnSidebar={true}
         activeLearnId={topic.id}
-        ctaLabel="Open Simulator"
+        ctaLabel="Open Lab"
         ctaTarget="simulator"
       >
         <ModuleTwoQuantumNumbersContent />
@@ -2994,11 +3078,11 @@ const LearnTopicPage = ({ topic, onNavigate }) => {
       eyebrow={topic.eyebrow}
       title={topic.title}
       message={topic.message}
-      heroClassName="hero-howto"
+      heroClassName={heroClassName}
       onNavigate={onNavigate}
       showLearnSidebar={true}
       activeLearnId={topic.id}
-      ctaLabel="Open Simulator"
+      ctaLabel="Open Lab"
       ctaTarget="simulator"
     >
       <ModuleThreeToSevenLongFormContent topic={topic} />
@@ -3083,14 +3167,20 @@ const InfoPageLayout = ({
   heroClassName = '',
   showLearnSidebar = false,
   activeLearnId = null,
+  pageClassName = '',
 }) => {
   const contentBlocks = React.Children.toArray(children);
   const insertIndex = Math.ceil(contentBlocks.length / 2);
   const firstHalfBlocks = contentBlocks.slice(0, insertIndex);
   const secondHalfBlocks = contentBlocks.slice(insertIndex);
+  const shellClassName = [
+    'info-page-shell',
+    showLearnSidebar ? 'has-learn-sidebar' : '',
+    heroClassName ? `shell-${heroClassName}` : '',
+  ].filter(Boolean).join(' ');
 
   return (
-    <div className={`info-page-shell ${showLearnSidebar ? 'has-learn-sidebar' : ''}`.trim()}>
+    <div className={shellClassName}>
       <div className={`info-page-main-layout ${showLearnSidebar ? 'has-learn-sidebar' : ''}`.trim()}>
         {showLearnSidebar && (
           <aside className="learn-sidebar" aria-label="Learn modules">
@@ -3112,7 +3202,7 @@ const InfoPageLayout = ({
           </aside>
         )}
 
-        <main className="page-style">
+        <main className={`page-style ${pageClassName}`.trim()}>
           {showLearnSidebar && (
             <>
               <h4 className="mobile-learn-module-heading">Learning Modules</h4>
@@ -3124,7 +3214,7 @@ const InfoPageLayout = ({
                     className={`mobile-learn-module-link ${activeLearnId === item.id ? 'is-active' : ''}`.trim()}
                     onClick={() => onNavigate(item.id)}
                   >
-                    {item.numberedShortLabel || item.label}
+                    {`${item.moduleNumber}. ${item.shortLabel || item.label}`}
                   </button>
                 ))}
               </nav>
@@ -3161,7 +3251,6 @@ const InfoPageLayout = ({
         </aside>
       </div>
 
-      <InfoFooter onNavigate={onNavigate} />
     </div>
   );
 };
@@ -3170,9 +3259,10 @@ const InfoPageLayout = ({
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState(() => {
-    if (typeof window === 'undefined') return 'welcome';
-    return getPageFromHash(window.location.hash) || 'welcome';
-  }); // welcome, chemistry, howto, faqs, learn-*, simulator, about, terms, privacy, contact
+    if (typeof window === 'undefined') return 'simulator';
+    return getPageFromHash(window.location.hash) || 'simulator';
+  }); // chemistry, howto, faqs, learn-*, simulator, about, terms, privacy, contact
+  const [isLearnNavOpen, setIsLearnNavOpen] = useState(() => isLearnPage(currentPage));
 
   // Global Quantum Controls
   const [n, setN] = useState(3);
@@ -3213,6 +3303,7 @@ const App = () => {
 
     setIsMobileNavOpen(false);
     setMobileSimulatorPanel(null);
+    if (isLearnPage(pageId)) setIsLearnNavOpen(true);
     setCurrentPage(pageId);
 
     if (typeof window !== 'undefined') {
@@ -3277,7 +3368,7 @@ const App = () => {
     return [dprMin, Math.min(deviceDpr, scatterDprCap)];
   }, [numPoints]);
 
-  const API_BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : '';
+  const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8000' : '';
 
   const parseApiResponse = async (response, endpointName) => {
     const raw = await response.text();
@@ -3408,14 +3499,21 @@ const App = () => {
     if (typeof window === 'undefined') return undefined;
 
     const syncPageWithHash = () => {
+      const normalizedHash = normalizeHashRoute(window.location.hash);
+      if (normalizedHash === '#/welcome' || normalizedHash === '#/simulator') {
+        window.location.hash = PAGE_ROUTE_MAP.simulator;
+        return;
+      }
+
       const hashPage = getPageFromHash(window.location.hash);
       if (hashPage) {
         setCurrentPage(hashPage);
+        if (isLearnPage(hashPage)) setIsLearnNavOpen(true);
       }
     };
 
     if (!getPageFromHash(window.location.hash)) {
-      window.location.hash = PAGE_ROUTE_MAP.welcome;
+      window.location.hash = PAGE_ROUTE_MAP.simulator;
     } else {
       syncPageWithHash();
     }
@@ -3445,48 +3543,63 @@ const App = () => {
   }, [currentPage]);
 
   useEffect(() => {
-    fetchData();
+    if (false && currentPage === 'simulator') {
+      fetchData();
+    }
     // eslint-disable-next-line
-  }, []); // Initial load
+  }, [currentPage]);
 
   return (
     <>
-      {/* Top Navigation Bar */}
-      <div className={`top-nav ${currentPage === 'simulator' ? 'top-nav-simulator' : ''} ${isMobileNavOpen ? 'mobile-nav-open' : ''}`.trim()}>
-        <h3>Quantum Orbital Explorer</h3>
+      <header className="mobile-topbar">
         <button
           type="button"
-          className="mobile-nav-toggle"
-          aria-expanded={isMobileNavOpen}
-          aria-controls="top-nav-buttons"
-          aria-label={isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          onClick={() => setIsMobileNavOpen((prev) => !prev)}
+          onClick={() => setIsMobileNavOpen((value) => !value)}
+          aria-label={isMobileNavOpen ? 'Close navigation' : 'Open navigation'}
         >
-          {isMobileNavOpen ? 'Close' : 'Menu'}
+          {isMobileNavOpen ? <X size={19} aria-hidden="true" /> : <Menu size={19} aria-hidden="true" />}
         </button>
+        <div className="mobile-brand">
+          <Atom size={19} aria-hidden="true" />
+          <span>Quantum Orbital Atlas</span>
+        </div>
+      </header>
 
-        <div id="top-nav-buttons" className="top-nav-buttons">
-          <button type="button" onClick={() => navigateToPage('welcome')} style={navButtonStyle(currentPage === 'welcome')}>Welcome</button>
-          <button type="button" onClick={() => navigateToPage('chemistry')} style={navButtonStyle(currentPage === 'chemistry')}>Chemistry Concepts</button>
-          <button type="button" onClick={() => navigateToPage('howto')} style={navButtonStyle(currentPage === 'howto')}>How To Use</button>
+      <aside className={`global-rail ${isMobileNavOpen ? 'mobile-nav-open' : ''}`.trim()}>
+          <div className="brand-lockup">
+            <div className="brand-mark" aria-hidden="true">
+              <Atom size={24} />
+            </div>
+            <div>
+              <strong>Quantum Orbital Atlas</strong>
+            </div>
+          </div>
 
-          <div className="learn-nav-item">
+        <MiniRadialPreview />
+
+        <nav id="top-nav-buttons" className="primary-nav top-nav-buttons" aria-label="Primary navigation">
+          <button type="button" title="Lab" className={currentPage === 'simulator' ? 'active' : ''} onClick={() => navigateToPage('simulator')}>
+            <Microscope size={17} aria-hidden="true" />
+            <strong>Lab</strong>
+          </button>
+
+          <div className={`learn-nav-group learn-nav-item ${isLearnNavOpen ? 'is-open' : ''}`.trim()}>
             <button
               type="button"
-              className="learn-nav-trigger"
-              onClick={() => navigateToPage('learn-quantum-theory')}
-              style={navButtonStyle(isLearnPage(currentPage))}
+              title="Learn"
+              className={`learn-nav-trigger ${isLearnPage(currentPage) ? 'active' : ''}`.trim()}
+              onClick={() => (currentPage === 'simulator' ? navigateToPage(learnMenuLinks[0]?.id || 'learn-quantum-theory') : setIsLearnNavOpen((value) => !value))}
+              aria-expanded={isLearnNavOpen}
             >
-              Learn
+              <BookOpen size={17} aria-hidden="true" />
+              <span>Learn</span>
             </button>
             <div
-              className="learn-dropdown"
+              className="learn-nav-list learn-dropdown"
               role="menu"
               aria-label="Learn pages"
-              onWheelCapture={(event) => event.preventDefault()}
-              onWheel={(event) => event.preventDefault()}
-              onTouchMove={(event) => event.preventDefault()}
             >
+              <span className="learn-dropdown-heading">Modules</span>
               {learnMenuLinks.map((item) => (
                 <button
                   key={item.id}
@@ -3494,17 +3607,46 @@ const App = () => {
                   className={`learn-dropdown-item ${currentPage === item.id ? 'is-active' : ''}`.trim()}
                   onClick={() => navigateToPage(item.id)}
                 >
-                  {item.shortLabel || item.label}
+                  <span className="learn-module-number">{item.moduleNumber}.</span>
+                  <span>{item.shortLabel || item.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <button type="button" onClick={() => navigateToPage('faqs')} style={navButtonStyle(currentPage === 'faqs')}>FAQs</button>
+          <button type="button" title="Quantum Chemistry" className={currentPage === 'chemistry' ? 'active' : ''} onClick={() => navigateToPage('chemistry')}>
+            <FlaskConical size={17} aria-hidden="true" />
+            <span>Quantum Chemistry</span>
+          </button>
+          <button type="button" title="Protocol" className={currentPage === 'howto' ? 'active' : ''} onClick={() => navigateToPage('howto')}>
+            <Workflow size={17} aria-hidden="true" />
+            <span>Protocol</span>
+          </button>
+          <button type="button" title="FAQ" className={currentPage === 'faqs' ? 'active' : ''} onClick={() => navigateToPage('faqs')}>
+            <HelpCircle size={17} aria-hidden="true" />
+            <span>FAQ</span>
+          </button>
+        </nav>
 
-          <button type="button" onClick={() => navigateToPage('simulator')} style={navButtonStyle(currentPage === 'simulator')}><strong>Simulator</strong></button>
-        </div>
-      </div>
+        <nav className="utility-nav sidebar-utility-links" aria-label="Information pages">
+          <button type="button" title="About" className={currentPage === 'about' ? 'active' : ''} onClick={() => navigateToPage('about')}>
+            <Info size={16} aria-hidden="true" />
+            <span>About</span>
+          </button>
+          <button type="button" title="Terms" className={currentPage === 'terms' ? 'active' : ''} onClick={() => navigateToPage('terms')}>
+            <FileText size={16} aria-hidden="true" />
+            <span>Terms</span>
+          </button>
+          <button type="button" title="Privacy" className={currentPage === 'privacy' ? 'active' : ''} onClick={() => navigateToPage('privacy')}>
+            <ShieldCheck size={16} aria-hidden="true" />
+            <span>Privacy</span>
+          </button>
+          <button type="button" title="Contact" className={currentPage === 'contact' ? 'active' : ''} onClick={() => navigateToPage('contact')}>
+            <Mail size={16} aria-hidden="true" />
+            <span>Contact</span>
+          </button>
+        </nav>
+      </aside>
 
       {currentPage === 'welcome' && (
         <InfoPageLayout
@@ -3588,11 +3730,11 @@ const App = () => {
       {currentPage === 'chemistry' && (
         <InfoPageLayout
           eyebrow="Quantum Foundations"
-          title="Orbital Structures and Wavefunction Phase"
+          title="Quantum Chemistry Framework"
           message="Understand the building blocks of matter. By mapping atomic orbitals and phase, we can predict bonding, geometry, and chemical reactivity."
           heroClassName="hero-chemistry"
           onNavigate={navigateToPage}
-          ctaLabel="Continue to How To Use"
+          ctaLabel="Continue to Protocol"
           ctaTarget="howto"
         >
           <InfoSection
@@ -3725,9 +3867,9 @@ const App = () => {
           eyebrow="Professional Workflow"
           title="From Parameter Selection To Interpretation"
           message="Use this page as an execution checklist so every simulation run gives actionable chemistry insight, not just a beautiful picture."
-          heroClassName="hero-howto"
+          heroClassName="hero-protocol"
           onNavigate={navigateToPage}
-          ctaLabel="Launch Simulator"
+          ctaLabel="Launch Lab"
           ctaTarget="simulator"
         >
           <InfoSection
@@ -3820,9 +3962,9 @@ const App = () => {
           eyebrow="Support and Guidance"
           title="FAQs"
           message="Common questions about the website, simulator workflow, accuracy scope, and usage policy."
-          heroClassName="hero-howto"
+          heroClassName="hero-faq"
           onNavigate={navigateToPage}
-          ctaLabel="Open Simulator"
+          ctaLabel="Open Lab"
           ctaTarget="simulator"
         >
           <InfoSection
@@ -3870,14 +4012,14 @@ const App = () => {
           eyebrow="Information Page"
           title="About Quantum Orbital Explorer"
           message="This page explains the platform mission, scientific design approach, and educational outcomes in a clear professional format."
-          heroClassName="hero-howto"
+          heroClassName="hero-about"
           onNavigate={navigateToPage}
           ctaLabel="Open Learn Modules"
           ctaTarget="learn-quantum-theory"
         >
           <InfoSection title="Platform Purpose" subtitle="Why this tool exists and what it delivers.">
-            <div className="info-grid two-column">
-              <article className="glass-card">
+            <div className="info-grid about-purpose-grid">
+              <article className="glass-card mission-feature-card">
                 <h3>Mission</h3>
                 <p>
                   Quantum Orbital Explorer is built to close the gap between abstract quantum mechanics and practical interpretation.
@@ -3960,10 +4102,10 @@ const App = () => {
           eyebrow="Information Page"
           title="Terms and Conditions"
           message="This page describes acceptable use, scientific scope, responsibility boundaries, and policy governance in plain professional language."
-          heroClassName="hero-howto"
+          heroClassName="hero-terms"
           onNavigate={navigateToPage}
-          ctaLabel="Back to Welcome"
-          ctaTarget="welcome"
+          ctaLabel="Back to Lab"
+          ctaTarget="simulator"
         >
           <InfoSection title="Usage Terms" subtitle="Core terms for educational and simulation use.">
             <div className="info-grid two-column">
@@ -4028,7 +4170,7 @@ const App = () => {
           eyebrow="Information Page"
           title="Privacy Policy"
           message="This page explains what information is processed, why it is processed, and how retention is managed in clear operational terms."
-          heroClassName="hero-howto"
+          heroClassName="hero-privacy"
           onNavigate={navigateToPage}
           ctaLabel="Go to Contact"
           ctaTarget="contact"
@@ -4083,6 +4225,7 @@ const App = () => {
             <div className="footer-link-list">
               <button className="footer-link-button" type="button" onClick={() => navigateToPage('about')}>About</button>
               <button className="footer-link-button" type="button" onClick={() => navigateToPage('terms')}>Terms and Conditions</button>
+              <button className="footer-link-button" type="button" onClick={() => navigateToPage('privacy')}>Privacy Policy</button>
               <button className="footer-link-button" type="button" onClick={() => navigateToPage('contact')}>Contact</button>
             </div>
           </InfoSection>
@@ -4094,9 +4237,9 @@ const App = () => {
           eyebrow="Information Page"
           title="Contact"
           message="Connect with the Quantum Orbital Explorer team for technical support, educational guidance, and platform policy clarification."
-          heroClassName="hero-howto"
+          heroClassName="hero-contact"
           onNavigate={navigateToPage}
-          ctaLabel="Open Simulator"
+          ctaLabel="Open Lab"
           ctaTarget="simulator"
         >
           <InfoSection title="Primary Contact Channels" subtitle="Use the channel that best matches your request type.">
@@ -4155,9 +4298,11 @@ const App = () => {
         </InfoPageLayout>
       )}
 
-      {currentPage === 'simulator' && (
+      {currentPage === 'simulator' && <RefurbishedSimulator />}
+
+      {false && currentPage === 'simulator' && (
         <div className={`App simulator-active ${mobileSimulatorPanel ? `mobile-panel-${mobileSimulatorPanel}` : ''}`.trim()}>
-          <div className="mobile-sim-toolbar" role="toolbar" aria-label="Simulator mobile panels">
+          <div className="mobile-sim-toolbar" role="toolbar" aria-label="Lab mobile panels">
             <button
               type="button"
               className={`mobile-sim-toolbar-btn ${mobileSimulatorPanel === 'controls' ? 'is-active' : ''}`.trim()}
@@ -4188,7 +4333,7 @@ const App = () => {
         >
           &lt;
         </button>
-        <h3 style={{marginTop: 0}}>Quantum Simulator</h3>
+        <h3 style={{marginTop: 0}}>Quantum Lab</h3>
         
         <form onSubmit={handleUpdate} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
           <div className="control-group">
@@ -4389,18 +4534,20 @@ const App = () => {
 
 // Reusable styling for the navigation buttons
 const navButtonStyle = (isActive) => ({
-  background: isActive ? 'linear-gradient(135deg, rgba(48, 198, 255, 0.23), rgba(122, 247, 176, 0.2))' : 'rgba(8, 19, 32, 0.35)',
-  border: isActive ? '1px solid rgba(96, 219, 255, 0.5)' : '1px solid rgba(112, 157, 196, 0.22)',
-  color: isActive ? '#dfffff' : '#d3e6fa',
-  fontSize: '1rem',
+  background: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+  border: '1px solid transparent',
+  boxShadow: isActive ? 'inset 3px 0 0 var(--accent-strong)' : 'none',
+  color: isActive ? 'var(--rail-text)' : 'var(--rail-muted)',
+  fontSize: '0.9rem',
+  fontWeight: 700,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
   cursor: 'pointer',
-  padding: '8px 14px',
-  borderRadius: '999px',
+  padding: '9px 12px',
+  borderRadius: '8px',
   transition: 'all 0.2s ease',
-  letterSpacing: '0.01em'
+  letterSpacing: '0'
 });
 
 export default App;
-
-
-
